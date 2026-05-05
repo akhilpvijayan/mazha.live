@@ -1,0 +1,637 @@
+/* ═══════════════════════════════════════════════════════
+   MAZHA.LIVE — MOBILE OPTIMIZATION PATCH v2
+   Changes from v1:
+     • Bottom nav replaced by inline button row below search
+     • Fullscreen map toggle button (below heatmap btn)
+     • PWA install banner gets a close/dismiss button
+   NO changes to desktop (≥769px) layout.
+   ═══════════════════════════════════════════════════════ */
+
+/* ── CSS CUSTOM PROPERTIES: mobile layout anchors ─────── */
+@media (max-width: 768px) {
+    :root {
+      --bottom-nav-h: 0px;          /* nav is gone — reset so FAB math still works */
+      --fab-bottom:   20px;         /* FAB sits 20px above viewport bottom */
+      --nav-btn-bar-h: 52px;        /* height of the inline button row below search */
+    }
+  }
+  
+  /* ════════════════════════════════════════════════════════
+     BOTTOM NAV — HIDDEN on mobile (replaced by inline btns)
+     ════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    .bottom-nav {
+      display: none !important;
+    }
+  }
+  
+  /* ════════════════════════════════════════════════════════
+     INLINE NAV BUTTON ROW
+     Sits in row 3 of the overlay stack, below:
+       Row 1 (top:12px)  — support btn | pwa banner | reset btn
+       Row 2 (top:60px)  — pin-search  | alert ban  | heatmap btn
+       Row 3 (top:108px) — [Search] [Activity] [Insights] [Districts]
+  
+     left: 12px, right: 12px so it clears the map-tools column
+     ════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    .nav-btn-row {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      position: absolute !important;
+      top: 108px !important;        /* row 3: below search row at 60px + 40px + 8px gap */
+      left: 12px !important;
+      right: 60px !important;       /* leave room for map-tools column (40px + 8px) */
+      gap: 6px !important;
+      box-sizing: border-box !important;
+      padding: 0 !important;
+      z-index: 601 !important;
+    }
+  
+    /* When alert banner is absent, row 2 is empty → slide up to row 2 */
+    .map-shell:not(:has(.map-banner)) .nav-btn-row {
+      top: 60px !important;
+    }
+  
+    /* When both pwa banner AND alert are absent → slide up to row 1 + 48px */
+    .map-shell:not(:has(.map-banner)):not(:has(.pwa-banner-bar)) .nav-btn-row {
+      top: 60px !important;          /* pin-fab still on row 2, keep aligned */
+    }
+  
+    .nav-btn {
+      flex: 1 1 0 !important;
+      min-width: 0 !important;
+      height: 38px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 5px !important;
+      border-radius: 11px !important;
+      background: var(--surface2) !important;
+      border: 1px solid var(--border2) !important;
+      box-shadow: 0 3px 12px rgba(0,0,0,.22) !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
+      color: var(--text2) !important;
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      letter-spacing: .2px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      cursor: pointer !important;
+      transition: background .18s, transform .15s, box-shadow .18s !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+  
+    .nav-btn svg {
+      width: 14px !important;
+      height: 14px !important;
+      flex-shrink: 0 !important;
+      opacity: .85;
+    }
+  
+    /* Active / selected state — add class "nav-btn--active" via JS */
+    .nav-btn--active {
+      background: var(--accent, #3b82f6) !important;
+      color: #fff !important;
+      border-color: transparent !important;
+      box-shadow: 0 4px 14px rgba(59,130,246,.35) !important;
+    }
+  
+    .nav-btn:active {
+      transform: scale(0.96) !important;
+    }
+  
+    /* Extra-narrow: icon only */
+    @media (max-width: 360px) {
+      .nav-btn {
+        font-size: 0 !important;     /* hide text */
+        height: 36px !important;
+      }
+      .nav-btn svg {
+        width: 17px !important;
+        height: 17px !important;
+        font-size: initial !important;
+      }
+    }
+  }
+  
+  /* ════════════════════════════════════════════════════════
+     FULLSCREEN MAP TOGGLE BUTTON
+     Place a <button id="map-fullscreen-btn" class="map-tool-btn map-fullscreen-btn">
+     in .map-tools in your HTML, after the heatmap button.
+  
+     Normal state  → icon: ⛶ (expand / four corners)
+     Fullscreen    → icon: ✕ or ⊠ (contract)
+  
+     Add class "map--fullscreen" to <body> or .map-shell
+     when active; CSS below handles the rest.
+     ════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+  
+    /* Button itself — lives in .map-tools column, row 3 */
+    .map-fullscreen-btn {
+      width: 40px !important;
+      height: 40px !important;
+      border-radius: 11px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: var(--surface2) !important;
+      border: 1px solid var(--border2) !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,.3) !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      cursor: pointer !important;
+      transition: all .2s !important;
+      color: var(--text2) !important;
+      z-index: 600 !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+    .map-fullscreen-btn:active { transform: scale(0.94) !important; }
+  
+    /* Expand icon (default) */
+    .map-fullscreen-btn .icon-expand  { display: block !important; }
+    .map-fullscreen-btn .icon-exit-fs { display: none  !important; }
+  
+    /* ── Fullscreen mode ── */
+  
+    /* When fullscreen is active, hide everything except the map and exit btn */
+    body.map--fullscreen .bottom-nav,
+    body.map--fullscreen .nav-btn-row,
+    body.map--fullscreen .info-footer,
+    body.map--fullscreen .pwa-banner-bar,
+    body.map--fullscreen .map-banner,
+    body.map--fullscreen .mobile-pin-fab,
+    body.map--fullscreen .report-fab,
+    body.map--fullscreen .info-disclaimer-chip,
+    body.map--fullscreen .last-updated,
+    body.map--fullscreen .mobile-live-sheet,
+    body.map--fullscreen header,
+    body.map--fullscreen .header {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+  
+    /* Keep map-tools visible but only the fullscreen button */
+    body.map--fullscreen .map-tools {
+      top: 12px !important;
+      right: 12px !important;
+      z-index: 9999 !important;
+    }
+  
+    /* Hide reset / heatmap btns in fullscreen, keep only fullscreen btn */
+    body.map--fullscreen .map-tool-btn:not(.map-fullscreen-btn) {
+      display: none !important;
+    }
+  
+    /* Switch icon to exit/contract */
+    body.map--fullscreen .map-fullscreen-btn .icon-expand  { display: none  !important; }
+    body.map--fullscreen .map-fullscreen-btn .icon-exit-fs { display: block !important; }
+  
+    /* Exit-fullscreen button gets a stronger highlight so users spot it */
+    body.map--fullscreen .map-fullscreen-btn {
+      background: var(--surface1, rgba(30,30,30,.9)) !important;
+      border-color: var(--accent, #3b82f6) !important;
+      box-shadow: 0 0 0 2px var(--accent, #3b82f6), 0 4px 16px rgba(0,0,0,.5) !important;
+      color: var(--accent, #3b82f6) !important;
+    }
+  
+    /* Expand map shell to cover everything */
+    body.map--fullscreen .map-shell,
+    body.map--fullscreen #map,
+    body.map--fullscreen .leaflet-container {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      z-index: 9990 !important;
+      border-radius: 0 !important;
+    }
+  }
+  
+  /* ════════════════════════════════════════════════════════
+     PWA INSTALL BANNER — CLOSE / DISMISS BUTTON
+     Add a <button class="pwa-banner-bar__close"> inside
+     .pwa-banner-bar in your HTML. Clicking it should add
+     a class like "pwa-banner-bar--dismissed" (or remove
+     the element) via JS.
+     ════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+  
+    /* Make sure the banner is a flex row so close btn fits */
+    .pwa-banner-bar {
+      position: absolute !important;
+      bottom: auto !important;
+      top: 12px !important;
+      left: 60px !important;
+      right: 60px !important;
+      transform: none !important;
+      height: 40px !important;
+      border-radius: 10px;
+      padding: 0 6px 0 8px !important;   /* tighter right pad — close btn handles it */
+      gap: 6px;
+      display: flex !important;
+      align-items: center !important;
+      z-index: 601;
+    }
+  
+    .pwa-banner-bar__icon     { display: none !important; }
+    .pwa-banner-bar__sub      { display: none !important; }
+    .pwa-banner-bar__progress { display: none !important; }
+    .pwa-banner-bar__text     { flex: 1; min-width: 0; overflow: hidden; }
+    .pwa-banner-bar__title    { font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pwa-banner-bar__btn      { padding: 5px 9px; font-size: 9.5px; border-radius: 7px; flex-shrink: 0; white-space: nowrap; }
+  
+    /* ── Close button ── */
+    .pwa-banner-bar__close {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-shrink: 0 !important;
+      width: 22px !important;
+      height: 22px !important;
+      min-width: 22px !important;
+      border-radius: 50% !important;
+      background: var(--border2, rgba(255,255,255,.12)) !important;
+      border: none !important;
+      color: var(--text3, rgba(255,255,255,.55)) !important;
+      cursor: pointer !important;
+      padding: 0 !important;
+      margin-left: 2px !important;
+      transition: background .15s, color .15s !important;
+      -webkit-tap-highlight-color: transparent !important;
+      /* SVG or text × inside */
+      font-size: 12px !important;
+      line-height: 1 !important;
+    }
+    .pwa-banner-bar__close:hover,
+    .pwa-banner-bar__close:active {
+      background: var(--danger, rgba(239,68,68,.25)) !important;
+      color: var(--danger-text, #f87171) !important;
+    }
+  
+    /* Hide banner when dismissed */
+    .pwa-banner-bar--dismissed {
+      display: none !important;
+    }
+  
+    @keyframes pwaSlideIn {
+      from { opacity: 0; transform: translateY(-14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  }
+  
+  /* ══════════════════════════════════════════════════════════
+     REMAINING SECTIONS — unchanged from v1
+     ══════════════════════════════════════════════════════════ */
+  
+  /* 1. REPORT FAB */
+  @media (max-width: 768px) {
+    .report-fab {
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      bottom: var(--fab-bottom) !important;
+      padding: 13px 26px !important;
+      font-size: 14px !important;
+      gap: 9px !important;
+      white-space: nowrap;
+      max-width: calc(100vw - 32px);
+      z-index: 610;
+    }
+    .report-fab:hover  { transform: translateX(-50%) scale(1.04) translateY(-2px) !important; }
+    .report-fab:active { transform: translateX(-50%) scale(0.97) !important; }
+  }
+  
+  /* 2. LAST UPDATED */
+  @media (max-width: 768px) {
+    .last-updated {
+      position: absolute !important;
+      top: 108px !important;
+      bottom: auto !important;
+      left: 60px !important;
+      right: 60px !important;
+      font-size: 7px;
+      padding: 3px 8px;
+      gap: 4px;
+      letter-spacing: .3px;
+      border-radius: 6px;
+      opacity: 0.75;
+      z-index: 551;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: auto !important;
+      max-width: none !important;
+      justify-content: center;
+    }
+    .upd-dot { width: 4px; height: 4px; }
+    .map-shell:not(:has(.map-banner)) .last-updated { top: 60px !important; }
+    .map-shell:not(:has(.map-banner)):not(:has(.pwa-banner-bar)) .last-updated { top: 12px !important; }
+  }
+  
+  /* 3. DISCLAIMER CHIP */
+  @media (max-width: 768px) {
+    .info-disclaimer-chip {
+      display: flex !important;
+      position: absolute !important;
+      bottom: 12px !important;          /* v2: sits 12px above viewport bottom (no nav) */
+      right: auto !important;
+      left: 8px !important;
+      font-size: 6.5px;
+      padding: 3px 7px;
+      max-width: 100vh;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 0.72;
+      z-index: 551;
+      gap: 3px;
+      border-radius: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--text3);
+      font-weight: 500;
+      letter-spacing: .3px;
+      align-items: center;
+    }
+  }
+  
+  /* 4. SUPPORT BUTTON */
+  @media (max-width: 768px) {
+    .info-footer {
+      display: flex !important;
+      position: absolute !important;
+      top: 12px !important;
+      left: 12px !important;
+      bottom: auto !important;
+      transform: none !important;
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      width: 40px !important;
+      height: 40px !important;
+      overflow: hidden !important;
+      z-index: 602;
+    }
+    .info-footer-left { display: none !important; }
+    .info-support-btn {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 40px !important;
+      height: 40px !important;
+      min-width: 40px !important;
+      padding: 0 !important;
+      font-size: 0 !important;
+      border-radius: 11px !important;
+      background: var(--surface2) !important;
+      border: 1px solid var(--border2) !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,.3);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      cursor: pointer; transition: all .2s;
+      overflow: hidden !important;
+      flex-shrink: 0;
+    }
+    .info-support-btn span:first-child { display: inline !important; font-size: 18px !important; line-height: 1; }
+    .info-support-btn span:last-child  { display: none !important; }
+    .info-support-btn:hover { background: var(--card2) !important; transform: scale(1.06); }
+  }
+  
+  /* 5. MAP BANNER (alert) — row 2, centre */
+  @media (max-width: 768px) {
+    .map-banner {
+      position: absolute !important;
+      top: 60px !important;
+      left: 60px !important;
+      right: 60px !important;
+      transform: none !important;
+      height: 40px !important;
+      max-width: none !important;
+      border-radius: 10px;
+      padding: 0 10px !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 5px;
+      font-size: 9.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      z-index: 590;
+    }
+    .intense-bar-track  { display: none !important; }
+    .banner-count-red,
+    .banner-count       { display: none !important; }
+  }
+  
+  /* 6. MAP TOOLS — reset (row1) + heatmap (row2) + fullscreen (row3) */
+  @media (max-width: 768px) {
+    .map-tools {
+      position: absolute !important;
+      top: 12px !important;
+      right: 12px !important;
+      flex-direction: column !important;
+      gap: 8px !important;
+      z-index: 600;
+    }
+    .map-tool-btn {
+      width: 40px !important;
+      height: 40px !important;
+      border-radius: 11px !important;
+    }
+  }
+  
+  /* 7. MOBILE PIN SEARCH FAB — row 2, col 1 */
+  @media (max-width: 768px) {
+    .mobile-pin-fab {
+      display: flex !important;
+      position: absolute !important;
+      top: 60px !important;
+      left: 12px !important;
+      bottom: auto !important;
+      width: 40px !important;
+      height: 40px !important;
+      border-radius: 11px !important;
+      z-index: 601 !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+  }
+  
+  /* 8. MOBILE LIVE SHEET */
+  @media (max-width: 768px) {
+    .mobile-live-sheet {
+      bottom: 0 !important;           /* no nav, sheet touches bottom */
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      max-height: 54vh;
+      border-radius: 18px 18px 0 0;
+      z-index: 650;
+    }
+    .mobile-live-body { padding: 0 10px 16px; }
+  }
+  
+  /* 9. MODAL SHEET */
+  @media (max-width: 768px) {
+    .modal-sheet {
+      max-height: 92vh !important;
+      border-radius: 22px 22px 0 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+      z-index: 900;
+    }
+    .modal-handle {
+      display: block !important;
+      width: 40px; height: 4px;
+      background: var(--border2);
+      border-radius: 99px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+    .modal-header { padding: 12px 16px 10px !important; flex-shrink: 0; }
+    .modal-title  { font-size: 16px !important; }
+    .modal-body   { padding: 14px 16px !important; flex: 1 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
+    .modal-close  { width: 34px !important; height: 34px !important; }
+  }
+  
+  /* 10. INTENSITY GRID */
+  @media (max-width: 400px) {
+    .intensity-grid { gap: 4px; }
+    .intensity-card { padding: 9px 2px 8px; }
+    .ic-icon-wrap   { width: 26px; height: 26px; }
+    .ic-label       { font-size: 7.5px; letter-spacing: 0; }
+  }
+  
+  /* 11. PIN INPUT ROW */
+  @media (max-width: 768px) {
+    .pin-row {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+      gap: 8px !important;
+      margin-bottom: 6px !important;
+    }
+    .pin-input {
+      flex: 1 1 0 !important;
+      min-width: 0 !important;
+      width: 0 !important;
+      max-width: none !important;
+      font-size: 22px !important;
+      letter-spacing: 8px !important;
+      padding: 13px 10px !important;
+      border-radius: 10px !important;
+      text-align: center;
+    }
+    .pin-locate-btn {
+      width: 46px !important;
+      height: 46px !important;
+      min-width: 46px !important;
+      flex-shrink: 0 !important;
+      flex-grow: 0 !important;
+      border-radius: 10px !important;
+    }
+    .pin-dots { gap: 6px !important; margin-top: 6px !important; margin-bottom: 4px !important; }
+    .pin-dot  { width: 7px !important; height: 7px !important; }
+    .pin-preview       { margin-top: 8px !important; padding: 9px 12px !important; border-radius: 10px !important; font-size: 12px !important; gap: 8px !important; }
+    .pin-preview-place { font-size: 12px !important; }
+    .pin-preview-dist  { font-size: 10px !important; }
+    .pin-err           { font-size: 11px !important; gap: 5px !important; margin-top: 6px !important; }
+  }
+  
+  /* 12. TOOLTIP */
+  @media (max-width: 768px) {
+    .mz-tt.leaflet-tooltip { min-width: 180px !important; max-width: calc(100vw - 24px) !important; }
+    .tt-wrap    { padding: 11px 13px; }
+    .tt-place   { font-size: 13px; }
+    .tt-stat-val{ font-size: 14px; }
+  }
+  
+  /* 13. MAP SHELL */
+  @media (max-width: 768px) {
+    .map-shell { height: 100% !important; }
+  }
+  
+  /* 14. HEADER — overlap prevention */
+  @media (max-width: 480px) {
+    .header        { padding: 0 10px; gap: 8px; }
+    .header-brand  { gap: 7px; flex-shrink: 0; }
+    .brand-mazha   { font-size: 15px; }
+    .brand-dot     { font-size: 15px; }
+    .brand-live    { font-size: 10px; letter-spacing: 1.5px; }
+    .header-logo-svg { width: 22px; height: 22px; }
+    .header-lang   { position: static !important; transform: none !important; flex-shrink: 1; }
+    .lang-btn      { padding: 5px 9px; font-size: 10px; }
+    .header-actions{ gap: 5px; flex-shrink: 0; }
+    .hdr-icon-btn  { width: 30px; height: 30px; }
+  }
+  @media (max-width: 360px) {
+    .brand-text       { display: none; }
+    .header-logo-svg  { width: 26px; height: 26px; }
+  }
+  
+  /* 15. ENGAGE PANEL */
+  @media (max-width: 768px) {
+    .engage-panel { display: none !important; }
+  }
+  
+  /* 16. REPORT CARDS, ACTIVITY, INSIGHTS */
+  @media (max-width: 768px) {
+    .report-card   { padding: 11px 12px; margin-bottom: 6px; border-radius: 11px; }
+    .rc-place      { font-size: 12.5px; }
+    .activity-item { padding: 8px 0; gap: 9px; }
+    .act-icon      { width: 28px; height: 28px; border-radius: 7px; }
+    .act-title     { font-size: 11.5px; }
+    .stats-grid    { gap: 6px; }
+    .stat-card     { padding: 9px 8px; border-radius: 9px; }
+    .stat-card-val { font-size: 19px; }
+  }
+  
+  /* 17. REPORT MODAL — intensity grid */
+  @media (max-width: 768px) {
+    .step-label + .step-label,
+    .step-label[style*="margin-top"] { margin-top: 16px !important; }
+    .intensity-grid { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 6px !important; margin-bottom: 18px !important; }
+    .intensity-card { padding: 11px 4px 9px !important; border-radius: 11px !important; gap: 6px !important; }
+    .ic-icon-wrap   { width: 30px !important; height: 30px !important; border-radius: 7px !important; }
+    .ic-icon-wrap svg { width: 20px !important; height: 20px !important; }
+    .ic-label       { font-size: 8px !important; letter-spacing: 0 !important; line-height: 1.3 !important; text-align: center !important; }
+  }
+  @media (max-width: 360px) {
+    .intensity-grid   { gap: 4px !important; }
+    .intensity-card   { padding: 9px 2px 8px !important; }
+    .ic-icon-wrap     { width: 26px !important; height: 26px !important; }
+    .ic-icon-wrap svg { width: 17px !important; height: 17px !important; }
+    .ic-label         { font-size: 7px !important; }
+  }
+  
+  /* 18. SUBMIT BUTTON */
+  @media (max-width: 768px) {
+    .modal-submit {
+      padding: 14px !important;
+      font-size: 14px !important;
+      border-radius: 12px !important;
+      gap: 8px !important;
+      position: sticky !important;
+      bottom: 0 !important;
+    }
+  }
+  
+  /* 19. SUCCESS CARD */
+  @media (max-width: 768px) {
+    .success-card      { padding: 24px 16px !important; }
+    .success-icon-wrap { width: 56px !important; height: 56px !important; margin-bottom: 14px !important; }
+    .success-title     { font-size: 16px !important; }
+    .success-msg       { font-size: 12px !important; }
+  }
