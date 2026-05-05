@@ -720,7 +720,7 @@ function InfoFooter({ reports, now }: { reports: RainReport[]; now: number }) {
           </a>
         </div>
         <button className="info-support-btn" onClick={() => setShowSupport(true)}>
-          <span>☕</span> Support 
+          <span>☕</span> Support
         </button>
       </div>
       <div className="info-disclaimer-chip">
@@ -1096,41 +1096,44 @@ export default function MapView() {
           <IconSearch size={18} color="var(--cyan)" />
         </button>
 
-        {/* ── INLINE NAV BUTTON ROW (mobile only, replaces bottom-nav) ── */}
+        {/* ── LEFT COLUMN NAV BUTTONS (mobile only) ──
+             Stacks vertically below the support button.
+             Icon-only, 40×40px — matches support / map-tool btns.
+             Order: Search → Activity → Insights → Districts        ── */}
         <div className="nav-btn-row">
           <button
             className={`nav-btn${showPinStatus ? ' nav-btn--active' : ''}`}
+            title="Search PIN"
             onClick={() => setShowPin(true)}
           >
-            <IconSearch size={14} />
-            Search
+            <IconSearch size={18} />
           </button>
           <button
-            className={`nav-btn${activeNav === 'activity' ? ' nav-btn--active' : ''}`}
+            className={`nav-btn${activeNav === 'activity' && showMobileSheet ? ' nav-btn--active' : ''}`}
+            title="Activity"
             onClick={() => {
               if (activeNav === 'activity' && showMobileSheet) { setMobileSheet(false); setActiveNav('radar'); }
               else openMobileTab('activity');
             }}
           >
-            <IconActivity size={14} />
-            Activity
+            <IconActivity size={18} />
           </button>
           <button
-            className={`nav-btn${activeNav === 'insights' ? ' nav-btn--active' : ''}`}
+            className={`nav-btn${activeNav === 'insights' && showMobileSheet ? ' nav-btn--active' : ''}`}
+            title="Insights"
             onClick={() => {
               if (activeNav === 'insights' && showMobileSheet) { setMobileSheet(false); setActiveNav('radar'); }
               else openMobileTab('insights');
             }}
           >
-            <IconBarChart size={14} />
-            Insights
+            <IconBarChart size={18} />
           </button>
           <button
-            className={`nav-btn${activeNav === 'districts' ? ' nav-btn--active' : ''}`}
-            onClick={() => { setActiveNav('districts'); setShowDist(true); }}
+            className={`nav-btn${showDistShare ? ' nav-btn--active' : ''}`}
+            title="Districts"
+            onClick={() => setShowDist(true)}
           >
-            <IconMapPin size={14} />
-            Districts
+            <IconMapPin size={18} />
           </button>
         </div>
       </div>
