@@ -11,7 +11,7 @@
 @media (max-width: 768px) {
   :root {
     --bottom-nav-h: 0px;          /* nav is gone — reset so FAB math still works */
-    --fab-bottom:   20px;         /* FAB sits 20px above viewport bottom */
+    --fab-bottom:   50px;         /* FAB sits 20px above viewport bottom */
     --nav-btn-bar-h: 52px;        /* height of the inline button row below search */
   }
 }

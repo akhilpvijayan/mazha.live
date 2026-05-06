@@ -21,6 +21,7 @@ import {
 } from './Icons';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { NotificationSettingsModal } from './NotificationSettings';
+import * as topojson from 'topojson-client';
 
 /* ─── constants ───────────────────────────────────────────── */
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
@@ -42,8 +43,12 @@ function getLevel(mm: number): Level {
   return 'drizzle';
 }
 
-const BADGE_COLORS: Record<Level, string> = {
-  drizzle: '#00d4ff', light: '#4db8ff', moderate: '#a855f7', heavy: '#7c3aed', extreme: '#ff3b3b',
+const BADGE_COLORS = {
+  drizzle: '#4d9fff',
+  light: '#60b4ff',
+  moderate: '#a855f7',
+  heavy: '#f59e0b',
+  extreme: '#ef4444',
 };
 
 const INTENSITY_OPTIONS: { Icon: any; mm: number; level: Level }[] = [
@@ -845,6 +850,8 @@ export default function MapView() {
   const { canInstall, install } = usePWAInstall();
 
   const [geo, setGeo] = useState<any>(null);
+  // ── NEW: Kerala district GeoJSON state ──
+  const [keralaDistrictGeo, setKeralaDistrictGeo] = useState<any>(null);
   const [rainData, setRainData] = useState<Record<string, RainReport>>({});
   const [now, setNow] = useState(Date.now());
   const [zoom, setZoom] = useState(7);
@@ -859,7 +866,6 @@ export default function MapView() {
   const [selectedPin, setSelectedPin] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState<'radar' | 'activity' | 'insights' | 'districts'>('radar');
   const [lastUpdated, setLastUpdated] = useState(0);
-  // ── NEW: fullscreen & PWA dismiss state ──
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pwaDismissed, setPwaDismissed] = useState(false);
   const mapRef = useRef<any>(null);
@@ -871,7 +877,19 @@ export default function MapView() {
   const heavyReport = reports.find(r => currentAvgIntensity(r, now) > 50);
 
   useEffect(() => {
+    // Load country/state outline GeoJSON (existing)
     fetch('/india_state.geojson').then(r => r.json()).then(setGeo);
+
+    // ── NEW: Load Kerala district boundaries GeoJSON ──
+    // Place kerala_districts.geojson in your /public folder
+    fetch('/kerala_districts.geojson')
+      .then(r => r.json())
+      .then(setKeralaDistrictGeo)
+      .catch(() => {
+        // Silently fail if file not found — districts just won't render
+        console.warn('kerala_districts.geojson not found in /public. District borders will not be shown.');
+      });
+
     if (isSupabaseReady()) {
       loadRainReports().then(data => { if (Object.keys(data).length) setRainData(data); });
     }
@@ -907,14 +925,12 @@ export default function MapView() {
     return () => map.off('zoomend', onZoom);
   }, [mapRef.current]);
 
-  // Sync fullscreen state to body class so CSS patch can respond
   useEffect(() => {
     if (isFullscreen) {
       document.body.classList.add('map--fullscreen');
     } else {
       document.body.classList.remove('map--fullscreen');
     }
-    // Invalidate map size after layout settles
     setTimeout(() => mapRef.current?.invalidateSize(), 100);
     return () => { document.body.classList.remove('map--fullscreen'); };
   }, [isFullscreen]);
@@ -946,20 +962,66 @@ export default function MapView() {
     if (r) mapRef.current?.flyTo([r.lat, r.lng], 12, { duration: 1.2 });
   }, [rainData]);
 
-  // ── Helper: open a mobile sheet tab ──
   const openMobileTab = (tab: 'activity' | 'insights') => {
     setActiveNav(tab);
     setMobileSheet(true);
   };
 
+  // ── Existing style: faint country/state outline ──
   const geoStyle = useCallback((feature: any) => {
     const isK = (feature?.properties?.NAME_1 || '').toLowerCase().includes('kerala');
     return { color: isK ? '#00d4ff' : (theme === 'dark' ? '#1a2a3a' : '#90b0cc'), weight: isK ? 1.5 : 0.4, fillColor: 'transparent', fillOpacity: 0, opacity: isK ? 0.85 : 0.25 };
   }, [theme]);
+
+  // ── Existing style: used for district grid from india_state.geojson (kept for compatibility) ──
   const districtStyle = useCallback(() => ({
     color: theme === 'dark' ? 'rgba(30, 143, 255, 0.07)' : 'rgba(0,90,180,0.45)',
     weight: 1, fillOpacity: 0, opacity: 1,
   }), [theme]);
+
+  // ── NEW: Kerala district border style ──
+  const keralaDistrictStyle = useCallback(() => ({
+    color: theme === 'dark' ? 'rgba(0, 212, 255, 0.30)' : 'rgba(0, 90, 200, 0.50)',
+    weight: 1,
+    fillColor: 'transparent',
+    fillOpacity: 0,
+    opacity: 1,
+    dashArray: undefined,
+  }), [theme]);
+
+  // ── NEW: highlight district on hover ──
+  const onEachKeralaDistrict = useCallback((feature: any, layer: any) => {
+    const name =
+      feature?.properties?.district ||
+      feature?.properties?.DISTRICT ||
+      feature?.properties?.NAME_2 ||
+      feature?.properties?.dtname ||
+      feature?.properties?.name ||
+      '';
+
+    if (name) {
+      layer.bindTooltip(name, {
+        sticky: true,
+        direction: 'top',
+        className: 'district-name-tooltip',
+        offset: [0, -4],
+      });
+    }
+
+    layer.on({
+      mouseover(e: any) {
+        e.target.setStyle({
+          fillColor: 'rgba(0,212,255,0.06)',
+          fillOpacity: 1,
+          weight: 1.5,
+          color: theme === 'dark' ? 'rgba(0,212,255,0.55)' : 'rgba(0,90,200,0.75)',
+        });
+      },
+      mouseout(e: any) {
+        e.target.setStyle(keralaDistrictStyle());
+      },
+    });
+  }, [theme, keralaDistrictStyle]);
 
   const darkTile = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
   const lightTile = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
@@ -970,7 +1032,21 @@ export default function MapView() {
         <MapContainer center={[10.8505, 76.2711]} zoom={7} style={{ height: '100%', width: '100%' }} zoomControl={false}>
           <MapRefSyncer onReady={m => { mapRef.current = m; setZoom(m.getZoom()); }} />
           <TileLayer key={theme} url={theme === 'dark' ? darkTile : lightTile} attribution="&copy; CARTO" />
+
+          {/* Layer 1 — faint country/state outlines */}
           {geo && <GeoJSON key={`dist-${theme}`} data={geo} style={districtStyle} />}
+
+          {/* Layer 2 — Kerala district borders (NEW) */}
+          {keralaDistrictGeo && (
+            <GeoJSON
+              key={`kerala-districts-${theme}`}
+              data={keralaDistrictGeo}
+              style={keralaDistrictStyle}
+              onEachFeature={onEachKeralaDistrict}
+            />
+          )}
+
+          {/* Layer 3 — bold Kerala state outline on top of districts */}
           {geo && <GeoJSON key={`state-${theme}`} data={geo} style={geoStyle} />}
 
           {!showHeat && reports.map(item => {
@@ -1017,7 +1093,6 @@ export default function MapView() {
             </div>
             <div className="pwa-banner-bar__progress" />
             <button className="pwa-banner-bar__btn" onClick={install}>Add to Home</button>
-            {/* ── CLOSE BUTTON ── */}
             <button
               className="pwa-banner-bar__close"
               aria-label="Dismiss install banner"
@@ -1045,6 +1120,18 @@ export default function MapView() {
 
         {/* ── Map tools: Reset | Heatmap | Fullscreen ── */}
         <div className="map-tools">
+          <button
+            className="map-tool-btn"
+            title="Refresh"
+            onClick={() => window.location.reload()}
+          >
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+              <path d="M8 16H3v5" />
+            </svg>
+          </button>
           <button className="map-tool-btn" title="Reset View" onClick={() => mapRef.current?.flyTo([10.8505, 76.2711], 7, { duration: 1 })}>
             <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" /><line x1="12" y1="2" x2="12" y2="6" /><line x1="12" y1="18" x2="12" y2="22" /><line x1="2" y1="12" x2="6" y2="12" /><line x1="18" y1="12" x2="22" y2="12" />
@@ -1053,20 +1140,17 @@ export default function MapView() {
           <button className={`map-tool-btn${showHeat ? ' on' : ''}`} title="Heatmap" onClick={() => setShowHeat(p => !p)}>
             <IconFire size={16} />
           </button>
-          {/* ── FULLSCREEN TOGGLE BUTTON ── */}
           <button
             className="map-tool-btn map-fullscreen-btn"
             title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen map'}
             onClick={() => setIsFullscreen(p => !p)}
           >
             {isFullscreen ? (
-              /* Contract / exit icon */
               <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" />
                 <line x1="10" y1="14" x2="3" y2="21" /><line x1="21" y1="3" x2="14" y2="10" />
               </svg>
             ) : (
-              /* Expand icon */
               <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" />
                 <line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
@@ -1091,15 +1175,60 @@ export default function MapView() {
           onViewAll={() => setShowAll(true)} onDistrictShare={() => setShowDist(true)} onPinStatus={() => setShowPin(true)} />
         <EngagementPanel reports={reports} now={now} />
 
+        {/* ── LEFT LIVE FEED PANEL ── */}
+        {/* ── LEFT LIVE FEED PANEL ── */}
+        <div className="live-feed-panel">
+          <div className="lf-header">
+            <div className="lf-title">
+              <div className="lf-live-dot" />
+              Live Reports
+            </div>
+            <div className="lf-count">{reports.length} active</div>
+          </div>
+          <div className="lf-body">
+            {[...reports]
+              .sort((a, b) => b.lastUpdated - a.lastUpdated)
+              .slice(0, 10)
+              .map((r, idx) => {
+                const ghost = isGhost(r, now);
+                const eff = currentAvgIntensity(r, now);
+                const level = ghost ? 'faded' : getLevel(eff);
+                const cssClass =
+                  ghost ? 'lf-faded' :
+                    level === 'extreme' ? 'lf-extreme' :
+                      level === 'heavy' ? 'lf-heavy' :
+                        level === 'moderate' ? 'lf-moderate' :
+                          'lf-active';
+                const label =
+                  ghost ? 'Faded' :
+                    level === 'extreme' ? 'Extreme' :
+                      level === 'heavy' ? 'Heavy' :
+                        level === 'moderate' ? 'Moderate' :
+                          level === 'light' ? 'Light' :
+                            'Drizzle';
+                return (
+                  <div
+                    key={r.pin}
+                    className={`lf-item ${cssClass}`}
+                    style={{ animationDelay: `${idx * 50}ms` }}
+                    onClick={() => handleSelect(r.pin)}
+                  >
+                    <div className="lf-status-dot" />
+                    <span className="lf-status-label">{label}</span>
+                    <span className="lf-place">{r.place}</span>
+                    <span className="lf-sub">{r.district} · {r.pin}</span>
+                    <span className="lf-time">{fmtTime(r.lastUpdated, t)}</span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+
         {/* ── Floating PIN search button (mobile row 2, col 1) ── */}
         <button className="mobile-pin-fab" onClick={() => setShowPin(true)} title="Search PIN">
           <IconSearch size={18} color="var(--cyan)" />
         </button>
 
-        {/* ── LEFT COLUMN NAV BUTTONS (mobile only) ──
-             Stacks vertically below the support button.
-             Icon-only, 40×40px — matches support / map-tool btns.
-             Order: Search → Activity → Insights → Districts        ── */}
         <div className="nav-btn-row">
           <button
             className={`nav-btn${showPinStatus ? ' nav-btn--active' : ''}`}
@@ -1138,7 +1267,6 @@ export default function MapView() {
         </div>
       </div>
 
-      {/* ── MobileLiveSheet (opened by Activity / Insights nav btns) ── */}
       {showMobileSheet && (activeNav === 'activity' || activeNav === 'insights') && (
         <MobileLiveSheet reports={reports} now={now}
           initialTab={activeNav as SbTab}
