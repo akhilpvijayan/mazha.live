@@ -21,12 +21,22 @@ import {
 } from './Icons';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { NotificationSettingsModal } from './NotificationSettings';
-import * as topojson from 'topojson-client';
+import { WalkthroughTour } from './Walkthroughtour';
+import {
+  IconHeartHandshake,
+  IconCoffee,
+  IconCurrencyRupee,
+  IconMoodSmile,
+  IconBolt,
+  IconQrcode,
+  IconSparkles,
+} from '@tabler/icons-react';
+import SupportModal from './SupportModal';
 
 /* ─── constants ───────────────────────────────────────────── */
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 const TWO_DAYS_MS = 24 * 60 * 60 * 1000;
-const TICK_MS = 30_000; // redraw every 30s to animate decay
+const TICK_MS = 30_000;
 
 /* ─── helpers ─────────────────────────────────────────────── */
 function MapRefSyncer({ onReady }: { onReady: (m: any) => void }) {
@@ -38,12 +48,14 @@ function MapRefSyncer({ onReady }: { onReady: (m: any) => void }) {
 type Level = 'drizzle' | 'light' | 'moderate' | 'heavy' | 'extreme';
 
 function getLevel(mm: number): Level {
-  if (mm > 80) return 'extreme'; if (mm > 50) return 'heavy';
-  if (mm > 20) return 'moderate'; if (mm > 8) return 'light';
+  if (mm > 80) return 'extreme';
+  if (mm > 50) return 'heavy';
+  if (mm > 20) return 'moderate';
+  if (mm > 8) return 'light';
   return 'drizzle';
 }
 
-const BADGE_COLORS = {
+const BADGE_COLORS: Record<Level, string> = {
   drizzle: '#4d9fff',
   light: '#60b4ff',
   moderate: '#a855f7',
@@ -74,15 +86,9 @@ function fmtDuration(ms: number): string {
   return `${m}m ago`;
 }
 
-/* ─── marker sizing — zoom-aware, no overlap ─────────────── */
 function markerRadius(zoom: number, intensity: number, selected: boolean): number {
-  const base = zoom <= 6 ? 4
-    : zoom === 7 ? 5
-      : zoom === 8 ? 6
-        : zoom === 9 ? 7
-          : zoom === 10 ? 8
-            : zoom === 11 ? 9
-              : 10;
+  const base = zoom <= 6 ? 4 : zoom === 7 ? 5 : zoom === 8 ? 6 : zoom === 9 ? 7
+    : zoom === 10 ? 8 : zoom === 11 ? 9 : 10;
   const bonus = Math.min(3, intensity / 40);
   const r = base + bonus;
   return selected ? r + 2 : r;
@@ -95,7 +101,8 @@ function buildShareText(pin: string, place: string, district: string, avg: numbe
 }
 function buildDistrictShareText(district: string, rpts: RainReport[]) {
   const avgs = rpts.map(r => currentAvgIntensity(r));
-  const max = Math.max(...avgs); const avg = avgs.reduce((a, b) => a + b, 0) / avgs.length;
+  const max = Math.max(...avgs);
+  const avg = avgs.reduce((a, b) => a + b, 0) / avgs.length;
   const lines = rpts.slice(0, 3).map(r => `  • ${r.place}: ${currentAvgIntensity(r).toFixed(0)} mm/hr`).join('\n');
   return `🌧️ *Mazha.Live — ${district} District Rain*\n\n📊 ${rpts.length} active location${rpts.length !== 1 ? 's' : ''}\n💧 Peak: *${max.toFixed(1)} mm/hr* | Avg: ${avg.toFixed(1)} mm/hr\n📌 Hotspots:\n${lines}\n\n🔗 Live rain map → https://mazha.live`;
 }
@@ -134,8 +141,7 @@ function ShareSheet({ title, text, onClose }: { title: string; text: string; onC
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 10 }}>
             <button onClick={() => waShare(text)} style={{ ...sbStyle, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.25)', color: '#25d366' }}>
-              <IconWhatsApp size={18} color="#25d366" />
-              WhatsApp
+              <IconWhatsApp size={18} color="#25d366" /> WhatsApp
             </button>
             <button onClick={() => tgShare(text)} style={{ ...sbStyle, background: 'rgba(0,136,204,0.08)', border: '1px solid rgba(0,136,204,0.25)', color: '#2ca5e0' }}>
               <svg width={17} height={17} viewBox="0 0 24 24" fill="#2ca5e0"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" /></svg>
@@ -147,8 +153,7 @@ function ShareSheet({ title, text, onClose }: { title: string; text: string; onC
             </button>
             {hasNativeShare
               ? <button onClick={() => nativeShare(text, title)} style={{ ...sbStyle, background: 'rgba(0,212,255,0.07)', border: '1px solid var(--border3)', color: 'var(--cyan)' }}>
-                <IconShare size={17} color="var(--cyan)" />
-                More…
+                <IconShare size={17} color="var(--cyan)" /> More…
               </button>
               : <button onClick={doCopyLink} style={{ ...sbStyle, background: 'rgba(0,212,255,0.07)', border: '1px solid var(--border3)', color: linkCopied ? '#00cc66' : 'var(--cyan)' }}>
                 {linkCopied ? <><IconCheck size={17} color="#00cc66" />Link Copied!</> : <><IconLink size={17} color="var(--cyan)" />Copy Link</>}
@@ -226,8 +231,11 @@ function MarkerTooltip({ item, now, ghost }: { item: RainReport; now: number; gh
 /* ─── REPORT MODAL ────────────────────────────────────────── */
 function ReportModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (pin: string, mm: number) => Promise<void> }) {
   const { t } = useLang();
-  const [pin, setPin] = useState(''); const [sel, setSel] = useState(2);
-  const [loading, setLoading] = useState(false); const [pinErr, setPinErr] = useState(''); const [done, setDone] = useState(false);
+  const [pin, setPin] = useState('');
+  const [sel, setSel] = useState(2);
+  const [loading, setLoading] = useState(false);
+  const [pinErr, setPinErr] = useState('');
+  const [done, setDone] = useState(false);
   const [pinPreview, setPinPreview] = useState<{ area: string; district: string } | null>(null);
   const [pinLooking, setPinLooking] = useState(false);
 
@@ -372,7 +380,8 @@ function AllReportsModal({ reports, now, onClose }: { reports: RainReport[]; now
 /* ─── PIN STATUS MODAL ────────────────────────────────────── */
 function PinStatusModal({ reports, now, onClose }: { reports: RainReport[]; now: number; onClose: () => void }) {
   const { t } = useLang();
-  const [pin, setPin] = useState(''); const [searching, setSearching] = useState(false);
+  const [pin, setPin] = useState('');
+  const [searching, setSearching] = useState(false);
   const [result, setResult] = useState<RainReport | null | 'notfound'>(null);
   const [pinInfo, setPinInfo] = useState<{ area: string; district: string } | null>(null);
   const [shareData, setShareData] = useState<{ title: string; text: string } | null>(null);
@@ -585,23 +594,21 @@ function InsightsTab({ reports, now }: { reports: RainReport[]; now: number }) {
   </div>;
 }
 
-/* ─── ENGAGEMENT PANEL (left side) ───────────────────────── */
+/* ─── ENGAGEMENT PANEL ────────────────────────────────────── */
 function EngagementPanel({ reports, now }: { reports: RainReport[]; now: number }) {
   const active = reports.filter(r => !isGhost(r, now));
   const ghosts = reports.filter(r => isGhost(r, now));
   const total = reports.reduce((s, r) => s + r.count, 0);
   const avgs = active.map(r => currentAvgIntensity(r, now));
   const maxMm = avgs.length ? Math.max(...avgs) : 0;
-  const districts = [...new Set(active.map(r => r.district))].length;
+  const districtCount = [...new Set(active.map(r => r.district))].length;
   const hoursSince = Math.floor((now - 1700000000000) / 3600000) % 8760 + 1200;
-
   const STATS = [
     { val: total || '—', lbl: 'Reports', icon: <IconDroplet size={13} color="#00d4ff" />, color: '#00d4ff' },
     { val: active.length || '—', lbl: 'Active', icon: <IconActivity size={13} color="#00cc66" />, color: '#00cc66' },
-    { val: districts || '—', lbl: 'Districts', icon: <IconMapPin size={13} color="#a855f7" />, color: '#a855f7' },
+    { val: districtCount || '—', lbl: 'Districts', icon: <IconMapPin size={13} color="#a855f7" />, color: '#a855f7' },
     { val: maxMm > 0 ? `${maxMm.toFixed(0)}mm` : '—', lbl: 'Peak', icon: <IconAlertTriangle size={13} color="#ff7a00" />, color: '#ff7a00' },
   ];
-
   return (
     <div className="engage-panel">
       <div className="ep-title">
@@ -628,83 +635,10 @@ function EngagementPanel({ reports, now }: { reports: RainReport[]; now: number 
 }
 
 /* ─── INFO FOOTER ─────────────────────────────────────────── */
-const SUPPORT_TIERS = [
-  { emoji: '🍌', name: 'Pazham', price: 5, desc: 'One sad banana for the server' },
-  { emoji: '🫓', name: 'Pazhampori', price: 15, desc: 'A hot pazhampori — classic!' },
-  { emoji: '🫁', name: 'Porotta + Beef', price: 40, desc: 'Full meal deal, legend!' },
-  { emoji: '👑', name: 'Sadya Plate', price: 100, desc: 'Full Onam sadya energy ✨' },
-  { emoji: '🚁', name: 'Chopper Rental', price: 500, desc: 'For weather balloon research 🎈' },
-];
-
-function SupportModal({ onClose }: { onClose: () => void }) {
-  const [sel, setSel] = useState(1);
-  const tier = SUPPORT_TIERS[sel];
-
-  const handlePay = () => {
-    const upi = import.meta.env.VITE_UPI_ID;
-    console.log(upi);
-    const url = `upi://pay?pa=${upi}&pn=MazhaLive&am=${tier.price}&cu=INR&tn=${encodeURIComponent(`Support Mazha.Live - ${tier.name}`)}`;
-    window.location.href = url;
-    setTimeout(() => {
-      window.open(`https://gpay.app.goo.gl/PAY?pa=${upi}&pn=MazhaLive&am=${tier.price}&cu=INR`, '_blank');
-    }, 500);
-  };
-
-  return (
-    <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-sheet" style={{ maxHeight: '80vh' }}>
-        <div className="modal-handle" />
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 24 }}>☕</span>
-            <div>
-              <div className="modal-title" style={{ fontSize: 16 }}>Buy the Dev a Meal</div>
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>This app runs on chai & community data 😅</div>
-            </div>
-          </div>
-          <button className="modal-close" onClick={onClose}><IconX size={14} /></button>
-        </div>
-        <div className="modal-body">
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border2)', borderRadius: 12, padding: '12px 14px', marginBottom: 18, fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
-            <strong style={{ color: 'var(--text)' }}>🌧️ Mazha.Live</strong> is built by one sleep-deprived dev in Kerala who gets alerts when it rains and still forgets an umbrella. Your support keeps the servers alive and the maps updated! No pressure — but karma is watching 🙏
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
-            {SUPPORT_TIERS.map((tier, i) => (
-              <button key={tier.name} onClick={() => setSel(i)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12,
-                  border: `1.5px solid ${sel === i ? 'var(--cyan)' : 'var(--border)'}`,
-                  background: sel === i ? 'rgba(0,212,255,0.07)' : 'var(--card)',
-                  cursor: 'pointer', textAlign: 'left', transition: 'all .2s', fontFamily: 'var(--ff)'
-                }}>
-                <span style={{ fontSize: 24, lineHeight: 1 }}>{tier.emoji}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{tier.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>{tier.desc}</div>
-                </div>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 800, color: sel === i ? 'var(--cyan)' : 'var(--text2)' }}>₹{tier.price}</div>
-                {sel === i && <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--cyan)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><IconCheck size={11} color="var(--cyan-dark)" /></div>}
-              </button>
-            ))}
-          </div>
-          <button onClick={handlePay} style={{ width: '100%', padding: '15px', background: 'var(--cyan)', border: 'none', borderRadius: 13, color: 'var(--cyan-dark)', fontFamily: 'var(--ff)', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 24px var(--glow-cyan)', transition: 'all .25s' }}>
-            <svg width={20} height={20} viewBox="0 0 512 512" fill="var(--cyan-dark)"><path d="M255.99 48C141.12 48 48 141.12 48 256s93.12 208 207.99 208S464 370.88 464 256 370.88 48 255.99 48zm49.5 313.92l-37.92-83.96-83.98-37.92 83.98-37.92 37.92-83.96 37.92 83.96 83.98 37.92-83.98 37.92-37.92 83.96z" /></svg>
-            Pay ₹{tier.price} via Google Pay
-          </button>
-          <div style={{ textAlign: 'center', fontSize: 10, color: 'var(--text3)', marginTop: 10 }}>
-            Opens Google Pay / any UPI app
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function InfoFooter({ reports, now }: { reports: RainReport[]; now: number }) {
   const [showSupport, setShowSupport] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const total = reports.reduce((s, r) => s + r.count, 0);
-
   return (
     <>
       <div className="info-footer">
@@ -715,18 +649,14 @@ function InfoFooter({ reports, now }: { reports: RainReport[]; now: number }) {
           </span>
           <span className="info-sep">·</span>
           <button className="info-link" onClick={() => setShowDisclaimer(true)}>
-            <IconAlertTriangle size={9} color="currentColor" />
-            Disclaimer
+            <IconAlertTriangle size={9} color="currentColor" /> Disclaimer
           </button>
           <span className="info-sep">·</span>
           <a className="info-link" href="https://mazha.live/terms" target="_blank" rel="noopener noreferrer">
-            <IconShield size={9} color="currentColor" />
-            Terms
+            <IconShield size={9} color="currentColor" /> Terms
           </a>
         </div>
-        <button className="info-support-btn" onClick={() => setShowSupport(true)}>
-          <span>☕</span> Support
-        </button>
+        <button className="info-support-btn" onClick={() => setShowSupport(true)}><span>☕</span> Support</button>
       </div>
       <div className="info-disclaimer-chip">
         <IconShield size={9} color="var(--text3)" />
@@ -770,7 +700,7 @@ function InfoFooter({ reports, now }: { reports: RainReport[]; now: number }) {
   );
 }
 
-/* FloatingSidebar */
+/* ─── FLOATING SIDEBAR ────────────────────────────────────── */
 function FloatingSidebar({ reports, now, selectedPin, onSelect, onViewAll, onDistrictShare, onPinStatus }: {
   reports: RainReport[]; now: number; selectedPin: string | null; onSelect: (p: string) => void;
   onViewAll: () => void; onDistrictShare: () => void; onPinStatus: () => void;
@@ -789,9 +719,7 @@ function FloatingSidebar({ reports, now, selectedPin, onSelect, onViewAll, onDis
           <div className="fsb-live-badge"><div className="fsb-live-dot" />LIVE</div>
         </div>
         <div className="fsb-search-row">
-          <button className="fsb-search-btn" onClick={onPinStatus}>
-            <IconSearch size={13} /> Search PIN Area
-          </button>
+          <button className="fsb-search-btn" onClick={onPinStatus}><IconSearch size={13} /> Search PIN Area</button>
         </div>
         <div className="fsb-tabs">
           {TABS.map(tb => <button key={tb.id} className={"fsb-tab" + (tab === tb.id ? ' active' : '')} onClick={() => setTab(tb.id)}><tb.Icon size={12} />{tb.label}</button>)}
@@ -813,7 +741,7 @@ function FloatingSidebar({ reports, now, selectedPin, onSelect, onViewAll, onDis
   );
 }
 
-/* MobileLiveSheet */
+/* ─── MOBILE LIVE SHEET ───────────────────────────────────── */
 function MobileLiveSheet({ reports, now, onClose, onDistrictShare, initialTab }: {
   reports: RainReport[]; now: number; onClose: () => void; onDistrictShare: () => void; initialTab?: SbTab;
 }) {
@@ -829,10 +757,7 @@ function MobileLiveSheet({ reports, now, onClose, onDistrictShare, initialTab }:
     <div className="mobile-live-sheet">
       <div className="mobile-live-handle" onClick={onClose} style={{ cursor: 'pointer' }} />
       <div className="mobile-live-tabs">
-        {TABS.map(tb => <button key={tb.id}
-          className={"mobile-live-tab" + (tab === tb.id ? ' active' : '')}
-          onClick={() => setTab(tb.id)}
-        ><tb.Icon size={12} />{tb.label}</button>)}
+        {TABS.map(tb => <button key={tb.id} className={"mobile-live-tab" + (tab === tb.id ? ' active' : '')} onClick={() => setTab(tb.id)}><tb.Icon size={12} />{tb.label}</button>)}
         <button className="mobile-live-tab" onClick={onDistrictShare}><IconShare size={12} />Districts</button>
       </div>
       <div className="mobile-live-body">
@@ -844,13 +769,17 @@ function MobileLiveSheet({ reports, now, onClose, onDistrictShare, initialTab }:
   );
 }
 
-/* ─── MAIN MAP VIEW ───────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   MAIN MAP VIEW
+   ═══════════════════════════════════════════════════════════ */
 export default function MapView() {
-  const { t } = useLang(); const { theme } = useTheme();
+  const { t } = useLang();
+  const { theme } = useTheme();
   const { canInstall, install } = usePWAInstall();
+  const [showTour, setShowTour] = useState(false);
 
+  /* ── state ── */
   const [geo, setGeo] = useState<any>(null);
-  // ── NEW: Kerala district GeoJSON state ──
   const [keralaDistrictGeo, setKeralaDistrictGeo] = useState<any>(null);
   const [rainData, setRainData] = useState<Record<string, RainReport>>({});
   const [now, setNow] = useState(Date.now());
@@ -859,42 +788,91 @@ export default function MapView() {
   const [showHeat, setShowHeat] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showAllModal, setShowAll] = useState(false);
-  const [showPinStatus, setShowPin] = useState(false);
+  const [showPinStatus, setShowPin] = useState(false);   // ← was missing
   const [showDistShare, setShowDist] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showMobileSheet, setMobileSheet] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);   // ← moved inside
   const [selectedPin, setSelectedPin] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState<'radar' | 'activity' | 'insights' | 'districts'>('radar');
   const [lastUpdated, setLastUpdated] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pwaDismissed, setPwaDismissed] = useState(false);
-  const mapRef = useRef<any>(null);
+  const [reportCooldown, setReportCooldown] = useState(0);       // ← moved inside
 
+  const mapRef = useRef<any>(null);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);  // ← moved inside
+
+  /* ── derived ── */
   const reports = useMemo(() =>
     Object.values(rainData).filter(r => !isExpired(r.lastUpdated, now)),
     [rainData, now]
   );
   const heavyReport = reports.find(r => currentAvgIntensity(r, now) > 50);
 
-  useEffect(() => {
-    // Load country/state outline GeoJSON (existing)
-    fetch('/india_state.geojson').then(r => r.json()).then(setGeo);
-
-    // ── NEW: Load Kerala district boundaries GeoJSON ──
-    // Place kerala_districts.geojson in your /public folder
-    fetch('/kerala_districts.geojson')
-      .then(r => r.json())
-      .then(setKeralaDistrictGeo)
-      .catch(() => {
-        // Silently fail if file not found — districts just won't render
-        console.warn('kerala_districts.geojson not found in /public. District borders will not be shown.');
+  /* ── cooldown helper ── */
+  const startCooldown = useCallback(() => {
+    setReportCooldown(10);
+    cooldownRef.current = setInterval(() => {
+      setReportCooldown(p => {
+        if (p <= 1) { clearInterval(cooldownRef.current!); return 0; }
+        return p - 1;
       });
+    }, 1000);
+  }, []);
 
+  /* ── effects ── */
+  useEffect(() => {
+    if (!localStorage.getItem('mz_tour_seen')) return;
+    if (localStorage.getItem('mz_onboarding_seen')) return;
+    setTimeout(() => setShowOnboarding(true), 1200);
+  }, []);
+
+  // ── IP-based first visit → show tour ──
+  useEffect(() => {
+    if (localStorage.getItem('mz_tour_seen')) return;
+
+    fetch('https://api.ipify.org?format=json')
+      .then(r => r.json())
+      .then(({ ip }) => {
+        const key = `mz_tour_ip_${btoa(ip).slice(0, 12)}`;
+        if (localStorage.getItem(key)) {
+          // same IP, tour already done — check if onboarding needed
+          // if (!localStorage.getItem('mz_onboarding_seen')) {
+          //   setTimeout(() => setShowOnboarding(true), 1200);
+          // }
+          return;
+        }
+        // new visitor — mark IP and show tour only
+        localStorage.setItem(key, '1');
+        setShowOnboarding(false);
+        setTimeout(() => setShowTour(true), 2200);
+      })
+      .catch(() => {
+        // IP fetch failed — show tour as fallback, not both
+        setTimeout(() => setShowTour(true), 2200);
+      });
+  }, []);
+  // PWA dismiss persistence
+  useEffect(() => {
+    if (localStorage.getItem('mz_pwa_dismissed')) setPwaDismissed(true);
+  }, []);
+
+  // cleanup cooldown on unmount
+  useEffect(() => () => { if (cooldownRef.current) clearInterval(cooldownRef.current); }, []);
+
+  // load GeoJSON + reports
+  useEffect(() => {
+    fetch('/india_state.geojson').then(r => r.json()).then(setGeo);
+    fetch('/kerala_districts.geojson').then(r => r.json()).then(setKeralaDistrictGeo).catch(() => {
+      console.warn('kerala_districts.geojson not found in /public.');
+    });
     if (isSupabaseReady()) {
       loadRainReports().then(data => { if (Object.keys(data).length) setRainData(data); });
     }
   }, []);
 
+  // realtime subscription
   useEffect(() => {
     if (!isSupabaseReady()) return;
     const channel = subscribeToReports((raw: RawReport) => {
@@ -909,14 +887,13 @@ export default function MapView() {
     return () => { channel?.unsubscribe(); };
   }, []);
 
+  // tick
   useEffect(() => {
-    const id = setInterval(() => {
-      setNow(Date.now());
-      setLastUpdated(p => p + 30);
-    }, TICK_MS);
+    const id = setInterval(() => { setNow(Date.now()); setLastUpdated(p => p + 30); }, TICK_MS);
     return () => clearInterval(id);
   }, []);
 
+  // zoom listener
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -925,15 +902,18 @@ export default function MapView() {
     return () => map.off('zoomend', onZoom);
   }, [mapRef.current]);
 
+  // fullscreen body class
   useEffect(() => {
-    if (isFullscreen) {
-      document.body.classList.add('map--fullscreen');
-    } else {
-      document.body.classList.remove('map--fullscreen');
-    }
+    document.body.classList.toggle('map--fullscreen', isFullscreen);
     setTimeout(() => mapRef.current?.invalidateSize(), 100);
     return () => { document.body.classList.remove('map--fullscreen'); };
   }, [isFullscreen]);
+
+  /* ── handlers ── */
+  const handlePwaDismiss = () => {
+    setPwaDismissed(true);
+    localStorage.setItem('mz_pwa_dismissed', '1');
+  };
 
   const handleAddRain = useCallback(async (pin: string, mm: number) => {
     setLoading(true);
@@ -947,14 +927,13 @@ export default function MapView() {
           ? { ...prev, [pin]: { ...ex, total: ex.total + mm, count: ex.count + 1, lastUpdated: ts } }
           : { ...prev, [pin]: { pin, lat: data.lat, lng: data.lng, place: data.area, district: data.district, total: mm, count: 1, lastUpdated: ts, firstReport: ts } };
       });
-      if (isSupabaseReady()) {
-        insertRainReport(pin, data.area, data.district, data.lat, data.lng, mm);
-      }
+      if (isSupabaseReady()) insertRainReport(pin, data.area, data.district, data.lat, data.lng, mm);
       setSelectedPin(pin);
       setLastUpdated(0);
       mapRef.current?.flyTo([data.lat, data.lng], 11, { duration: 1.6 });
+      startCooldown();
     } finally { setLoading(false); }
-  }, [t]);
+  }, [t, startCooldown]);
 
   const handleSelect = useCallback((pin: string) => {
     setSelectedPin(p => p === pin ? null : pin);
@@ -963,69 +942,39 @@ export default function MapView() {
   }, [rainData]);
 
   const openMobileTab = (tab: 'activity' | 'insights') => {
-    setActiveNav(tab);
-    setMobileSheet(true);
+    setActiveNav(tab); setMobileSheet(true);
   };
 
-  // ── Existing style: faint country/state outline ──
+  /* ── map styles ── */
   const geoStyle = useCallback((feature: any) => {
     const isK = (feature?.properties?.NAME_1 || '').toLowerCase().includes('kerala');
     return { color: isK ? '#00d4ff' : (theme === 'dark' ? '#1a2a3a' : '#90b0cc'), weight: isK ? 1.5 : 0.4, fillColor: 'transparent', fillOpacity: 0, opacity: isK ? 0.85 : 0.25 };
   }, [theme]);
 
-  // ── Existing style: used for district grid from india_state.geojson (kept for compatibility) ──
   const districtStyle = useCallback(() => ({
-    color: theme === 'dark' ? 'rgba(30, 143, 255, 0.07)' : 'rgba(0,90,180,0.45)',
+    color: theme === 'dark' ? 'rgba(30,143,255,0.07)' : 'rgba(0,90,180,0.45)',
     weight: 1, fillOpacity: 0, opacity: 1,
   }), [theme]);
 
-  // ── NEW: Kerala district border style ──
   const keralaDistrictStyle = useCallback(() => ({
-    color: theme === 'dark' ? 'rgba(0, 212, 255, 0.30)' : 'rgba(0, 90, 200, 0.50)',
-    weight: 1,
-    fillColor: 'transparent',
-    fillOpacity: 0,
-    opacity: 1,
-    dashArray: undefined,
+    color: theme === 'dark' ? 'rgba(0,212,255,0.30)' : 'rgba(0,90,200,0.50)',
+    weight: 1, fillColor: 'transparent', fillOpacity: 0, opacity: 1,
   }), [theme]);
 
-  // ── NEW: highlight district on hover ──
   const onEachKeralaDistrict = useCallback((feature: any, layer: any) => {
-    const name =
-      feature?.properties?.district ||
-      feature?.properties?.DISTRICT ||
-      feature?.properties?.NAME_2 ||
-      feature?.properties?.dtname ||
-      feature?.properties?.name ||
-      '';
-
-    if (name) {
-      layer.bindTooltip(name, {
-        sticky: true,
-        direction: 'top',
-        className: 'district-name-tooltip',
-        offset: [0, -4],
-      });
-    }
-
+    const name = feature?.properties?.district || feature?.properties?.DISTRICT
+      || feature?.properties?.NAME_2 || feature?.properties?.dtname || feature?.properties?.name || '';
+    if (name) layer.bindTooltip(name, { sticky: true, direction: 'top', className: 'district-name-tooltip', offset: [0, -4] });
     layer.on({
-      mouseover(e: any) {
-        e.target.setStyle({
-          fillColor: 'rgba(0,212,255,0.06)',
-          fillOpacity: 1,
-          weight: 1.5,
-          color: theme === 'dark' ? 'rgba(0,212,255,0.55)' : 'rgba(0,90,200,0.75)',
-        });
-      },
-      mouseout(e: any) {
-        e.target.setStyle(keralaDistrictStyle());
-      },
+      mouseover(e: any) { e.target.setStyle({ fillColor: 'rgba(0,212,255,0.06)', fillOpacity: 1, weight: 1.5, color: theme === 'dark' ? 'rgba(0,212,255,0.55)' : 'rgba(0,90,200,0.75)' }); },
+      mouseout(e: any) { e.target.setStyle(keralaDistrictStyle()); },
     });
   }, [theme, keralaDistrictStyle]);
 
   const darkTile = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
   const lightTile = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
+  /* ── render ── */
   return (
     <>
       <div className="map-shell">
@@ -1033,46 +982,22 @@ export default function MapView() {
           <MapRefSyncer onReady={m => { mapRef.current = m; setZoom(m.getZoom()); }} />
           <TileLayer key={theme} url={theme === 'dark' ? darkTile : lightTile} attribution="&copy; CARTO" />
 
-          {/* Layer 1 — faint country/state outlines */}
           {geo && <GeoJSON key={`dist-${theme}`} data={geo} style={districtStyle} />}
-
-          {/* Layer 2 — Kerala district borders (NEW) */}
-          {keralaDistrictGeo && (
-            <GeoJSON
-              key={`kerala-districts-${theme}`}
-              data={keralaDistrictGeo}
-              style={keralaDistrictStyle}
-              onEachFeature={onEachKeralaDistrict}
-            />
-          )}
-
-          {/* Layer 3 — bold Kerala state outline on top of districts */}
+          {keralaDistrictGeo && <GeoJSON key={`kerala-districts-${theme}`} data={keralaDistrictGeo} style={keralaDistrictStyle} onEachFeature={onEachKeralaDistrict} />}
           {geo && <GeoJSON key={`state-${theme}`} data={geo} style={geoStyle} />}
 
           {!showHeat && reports.map(item => {
             const ghost = isGhost(item, now);
             const effAvg = currentAvgIntensity(item, now);
-            const rawAvg = item.total / item.count;
             const displayMm = ghost ? 0 : effAvg;
             const color = ghost ? '#6b7a8d' : getIntensityColor(displayMm);
             const sel = selectedPin === item.pin;
             const r = markerRadius(zoom, displayMm, sel);
             const fillOpacity = ghost ? 0.28 : Math.max(0.4, 0.85 * decayFactor(item.lastUpdated, now) + 0.15);
-
             return (
-              <CircleMarker
-                key={item.pin}
-                center={[item.lat, item.lng]}
-                radius={r}
-                pathOptions={{
-                  color: sel ? '#ffffff' : (ghost ? '#4a5568' : color),
-                  weight: sel ? 2 : ghost ? 0.8 : 1.2,
-                  fillColor: color,
-                  fillOpacity,
-                  dashArray: ghost ? '3 2' : undefined,
-                }}
-                eventHandlers={{ click: () => handleSelect(item.pin) }}
-              >
+              <CircleMarker key={item.pin} center={[item.lat, item.lng]} radius={r}
+                pathOptions={{ color: sel ? '#ffffff' : (ghost ? '#4a5568' : color), weight: sel ? 2 : ghost ? 0.8 : 1.2, fillColor: color, fillOpacity, dashArray: ghost ? '3 2' : undefined }}
+                eventHandlers={{ click: () => handleSelect(item.pin) }}>
                 <Tooltip key={`tt-${item.pin}-${theme}`} className="mz-tt" direction="top" offset={[0, -r - 2]} sticky={false}>
                   <MarkerTooltip item={item} now={now} ghost={ghost} />
                 </Tooltip>
@@ -1081,7 +1006,7 @@ export default function MapView() {
           })}
         </MapContainer>
 
-        {/* ── PWA install banner — with close button ── */}
+        {/* PWA banner */}
         {canInstall && !pwaDismissed && (
           <div className="pwa-banner-bar">
             <div className="pwa-banner-bar__icon">
@@ -1091,16 +1016,10 @@ export default function MapView() {
               <div className="pwa-banner-bar__title">Install Mazha.Live</div>
               <div className="pwa-banner-bar__sub">Track rain from your home screen</div>
             </div>
-            <div className="pwa-banner-bar__progress" />
             <button className="pwa-banner-bar__btn" onClick={install}>Add to Home</button>
-            <button
-              className="pwa-banner-bar__close"
-              aria-label="Dismiss install banner"
-              onClick={() => setPwaDismissed(true)}
-            >
+            <button className="pwa-banner-bar__close" aria-label="Dismiss install banner" onClick={handlePwaDismiss}>
               <svg width={10} height={10} viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
-                <line x1="1" y1="1" x2="9" y2="9" />
-                <line x1="9" y1="1" x2="1" y2="9" />
+                <line x1="1" y1="1" x2="9" y2="9" /><line x1="9" y1="1" x2="1" y2="9" />
               </svg>
             </button>
           </div>
@@ -1118,13 +1037,9 @@ export default function MapView() {
           </div>
         )}
 
-        {/* ── Map tools: Reset | Heatmap | Fullscreen ── */}
+        {/* Map tools */}
         <div className="map-tools">
-          <button
-            className="map-tool-btn"
-            title="Refresh"
-            onClick={() => window.location.reload()}
-          >
+          <button className="map-tool-btn" title="Refresh" onClick={() => window.location.reload()}>
             <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
               <path d="M21 3v5h-5" />
@@ -1134,34 +1049,49 @@ export default function MapView() {
           </button>
           <button className="map-tool-btn" title="Reset View" onClick={() => mapRef.current?.flyTo([10.8505, 76.2711], 7, { duration: 1 })}>
             <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" /><line x1="12" y1="2" x2="12" y2="6" /><line x1="12" y1="18" x2="12" y2="22" /><line x1="2" y1="12" x2="6" y2="12" /><line x1="18" y1="12" x2="22" y2="12" />
+              <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" />
+              <line x1="12" y1="2" x2="12" y2="6" /><line x1="12" y1="18" x2="12" y2="22" />
+              <line x1="2" y1="12" x2="6" y2="12" /><line x1="18" y1="12" x2="22" y2="12" />
             </svg>
           </button>
+
           <button className={`map-tool-btn${showHeat ? ' on' : ''}`} title="Heatmap" onClick={() => setShowHeat(p => !p)}>
             <IconFire size={16} />
           </button>
           <button
             className="map-tool-btn map-fullscreen-btn"
-            title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen map'}
+            title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
             onClick={() => setIsFullscreen(p => !p)}
           >
-            {isFullscreen ? (
-              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" />
-                <line x1="10" y1="14" x2="3" y2="21" /><line x1="21" y1="3" x2="14" y2="10" />
-              </svg>
-            ) : (
-              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" />
-                <line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
-              </svg>
-            )}
+            {isFullscreen
+              ? <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" /><line x1="10" y1="14" x2="3" y2="21" /><line x1="21" y1="3" x2="14" y2="10" /></svg>
+              : <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /><line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" /></svg>
+            }
           </button>
         </div>
 
-        <button className="report-fab" onClick={() => setShowModal(true)} disabled={loading}>
-          <IconCloudRain size={20} color="var(--cyan-dark)" />
-          {loading ? t.locating : t.reportRain}
+        {/* Report FAB with cooldown */}
+        <button
+          className="report-fab"
+          onClick={() => { if (reportCooldown === 0) setShowModal(true); }}
+          disabled={loading || reportCooldown > 0}
+          style={reportCooldown > 0 ? { opacity: 0.75, cursor: 'not-allowed' } : {}}
+        >
+          {reportCooldown > 0 ? (
+            <>
+              <svg width={22} height={22} viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)', flexShrink: 0 }}>
+                <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="3" />
+                <circle cx="18" cy="18" r="15" fill="none" stroke="var(--cyan-dark)" strokeWidth="3"
+                  strokeDasharray={`${(reportCooldown / 10) * 94} 94`} strokeLinecap="round" />
+              </svg>
+              Wait {reportCooldown}s
+            </>
+          ) : (
+            <>
+              <IconCloudRain size={22} color="var(--cyan-dark)" />
+              {loading ? t.locating : t.reportRain}
+            </>
+          )}
         </button>
 
         <div className="last-updated">
@@ -1169,13 +1099,14 @@ export default function MapView() {
           {t.lastUpdated}: {lastUpdated}S AGO
           {isSupabaseReady() && <span style={{ marginLeft: 6, fontSize: 8, color: 'var(--cyan)', fontWeight: 700, letterSpacing: .5 }}>● LIVE</span>}
         </div>
+
         <InfoFooter reports={reports} now={now} />
 
         <FloatingSidebar reports={reports} now={now} selectedPin={selectedPin} onSelect={handleSelect}
           onViewAll={() => setShowAll(true)} onDistrictShare={() => setShowDist(true)} onPinStatus={() => setShowPin(true)} />
+
         <EngagementPanel reports={reports} now={now} />
 
-        {/* ── LEFT LIVE FEED PANEL ── */}
         {/* ── LEFT LIVE FEED PANEL ── */}
         <div className="live-feed-panel">
           <div className="lf-header">
@@ -1224,61 +1155,95 @@ export default function MapView() {
           </div>
         </div>
 
-        {/* ── Floating PIN search button (mobile row 2, col 1) ── */}
+
+        {/* Mobile PIN search FAB */}
         <button className="mobile-pin-fab" onClick={() => setShowPin(true)} title="Search PIN">
           <IconSearch size={18} color="var(--cyan)" />
         </button>
 
+        {/* Mobile nav buttons */}
         <div className="nav-btn-row">
-          <button
-            className={`nav-btn${showPinStatus ? ' nav-btn--active' : ''}`}
-            title="Search PIN"
-            onClick={() => setShowPin(true)}
-          >
+          <button className={`nav-btn${showPinStatus ? ' nav-btn--active' : ''}`} title="Search PIN" onClick={() => setShowPin(true)}>
             <IconSearch size={18} />
           </button>
-          <button
-            className={`nav-btn${activeNav === 'activity' && showMobileSheet ? ' nav-btn--active' : ''}`}
-            title="Activity"
-            onClick={() => {
-              if (activeNav === 'activity' && showMobileSheet) { setMobileSheet(false); setActiveNav('radar'); }
-              else openMobileTab('activity');
-            }}
-          >
+          <button className={`nav-btn${activeNav === 'activity' && showMobileSheet ? ' nav-btn--active' : ''}`} title="Activity"
+            onClick={() => { if (activeNav === 'activity' && showMobileSheet) { setMobileSheet(false); setActiveNav('radar'); } else openMobileTab('activity'); }}>
             <IconActivity size={18} />
           </button>
-          <button
-            className={`nav-btn${activeNav === 'insights' && showMobileSheet ? ' nav-btn--active' : ''}`}
-            title="Insights"
-            onClick={() => {
-              if (activeNav === 'insights' && showMobileSheet) { setMobileSheet(false); setActiveNav('radar'); }
-              else openMobileTab('insights');
-            }}
-          >
+          <button className={`nav-btn${activeNav === 'insights' && showMobileSheet ? ' nav-btn--active' : ''}`} title="Insights"
+            onClick={() => { if (activeNav === 'insights' && showMobileSheet) { setMobileSheet(false); setActiveNav('radar'); } else openMobileTab('insights'); }}>
             <IconBarChart size={18} />
           </button>
-          <button
-            className={`nav-btn${showDistShare ? ' nav-btn--active' : ''}`}
-            title="Districts"
-            onClick={() => setShowDist(true)}
-          >
+          <button className={`nav-btn${showDistShare ? ' nav-btn--active' : ''}`} title="Districts" onClick={() => setShowDist(true)}>
             <IconMapPin size={18} />
           </button>
         </div>
       </div>
 
+      {/* Mobile sheet */}
       {showMobileSheet && (activeNav === 'activity' || activeNav === 'insights') && (
-        <MobileLiveSheet reports={reports} now={now}
-          initialTab={activeNav as SbTab}
+        <MobileLiveSheet reports={reports} now={now} initialTab={activeNav as SbTab}
           onClose={() => { setMobileSheet(false); setActiveNav('radar'); }}
           onDistrictShare={() => setShowDist(true)} />
       )}
 
+      {/* Modals */}
       {showModal && <ReportModal onClose={() => setShowModal(false)} onSubmit={handleAddRain} />}
       {showAllModal && <AllReportsModal reports={reports} now={now} onClose={() => setShowAll(false)} />}
       {showPinStatus && <PinStatusModal reports={reports} now={now} onClose={() => setShowPin(false)} />}
       {showDistShare && <DistrictShareModal reports={reports} now={now} onClose={() => setShowDist(false)} />}
       {showNotif && <NotificationSettingsModal onClose={() => setShowNotif(false)} />}
+
+      {/* First-visit onboarding */}
+      {showOnboarding && (
+        <div className="modal-backdrop" style={{ alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => { setShowOnboarding(false); localStorage.setItem('mz_onboarding_seen', '1'); }}>
+          <div className="modal-sheet"
+            style={{ width: 340, borderRadius: 22, maxHeight: '90vh', animation: 'successIn .5s var(--spring)', padding: '0 0 28px' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ background: 'linear-gradient(135deg, rgba(26,111,255,0.18) 0%, rgba(168,85,247,0.12) 100%)', borderRadius: '22px 22px 0 0', padding: '32px 28px 24px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 52, marginBottom: 14, lineHeight: 1, filter: 'drop-shadow(0 4px 16px rgba(26,111,255,0.4))' }}>🌧️</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', marginBottom: 6 }}>മഴ ഉണ്ടോ? Report it!</div>
+              <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>Help your community know where it's raining in Kerala — right now, in real time.</div>
+            </div>
+            <div style={{ padding: '20px 24px 0' }}>
+              {[
+                { icon: '📍', title: 'Enter your PIN code', desc: 'Just your 6-digit postal code' },
+                { icon: '💧', title: 'Select rain intensity', desc: 'Drizzle to extreme — you decide' },
+                { icon: '🗺️', title: 'See it live on the map', desc: 'Your report appears instantly' },
+              ].map(s => (
+                <div key={s.title} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 22, flexShrink: 0, lineHeight: 1.4 }}>{s.icon}</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{s.title}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)' }}>{s.desc}</div>
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={() => { setShowOnboarding(false); localStorage.setItem('mz_onboarding_seen', '1'); setTimeout(() => setShowModal(true), 300); }}
+                style={{ width: '100%', marginTop: 20, padding: '15px', background: 'var(--cyan)', border: 'none', borderRadius: 13, color: 'var(--cyan-dark)', fontFamily: 'var(--ff)', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 24px var(--glow-cyan)' }}>
+                <IconCloudRain size={18} color="var(--cyan-dark)" />
+                Report Rain Near Me
+              </button>
+              <button
+                onClick={() => { setShowOnboarding(false); localStorage.setItem('mz_onboarding_seen', '1'); }}
+                style={{ width: '100%', marginTop: 10, padding: '12px', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 13, color: 'var(--text3)', fontFamily: 'var(--ff)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                Skip for now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── WALKTHROUGH TOUR ── */}
+      {showTour && (
+        <WalkthroughTour onDone={() => {
+          setShowTour(false);
+          localStorage.setItem('mz_tour_seen', '1');
+        }} />
+      )}
     </>
   );
 }
+

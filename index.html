@@ -1,22 +1,184 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-IN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <!-- ═══════════════════════════════════════
+         PRIMARY SEO
+         · Title ≤60 chars: brand · keyword · location
+         · Description 120–155 chars: action-oriented + keywords
+    ═══════════════════════════════════════ -->
+    <title>mazha.live – Live Kerala Rain Tracker & Community Rain Map</title>
+    <meta name="description" content="Track live rain in Kerala with real-time community reports. See rain intensity, location-wise updates, and current weather across Kerala districts — mazha.live" />
+    <meta name="keywords" content="kerala rain tracker, live rain kerala, mazha live, kerala rain map, rain report kerala, kerala weather live, rain intensity kerala, district rain kerala, monsoon tracker kerala, mazha" />
+    <meta name="author" content="mazha.live" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <link rel="canonical" href="https://mazha.live/" />
+
+    <!-- ═══════════════════════════════════════
+         GEO / REGIONAL SIGNALS
+         Helps Google rank for Kerala-specific searches
+    ═══════════════════════════════════════ -->
+    <meta name="geo.region" content="IN-KL" />
+    <meta name="geo.placename" content="Kerala, India" />
+    <meta name="geo.position" content="10.8505;76.2711" />
+    <meta name="ICBM" content="10.8505, 76.2711" />
+    <meta name="language" content="English" />
+    <meta name="content-language" content="en-IN" />
+
+    <!-- ═══════════════════════════════════════
+         THEME / PWA
+    ═══════════════════════════════════════ -->
     <meta name="theme-color" content="#070e1a" id="theme-meta" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="mazha.live" />
-    <meta name="description" content="Real-time community rain reporting map for Kerala — mazha.live" />
+    <meta name="application-name" content="mazha.live" />
     <link rel="manifest" href="/manifest.json" />
+
+    <!-- ═══════════════════════════════════════
+         FAVICONS
+    ═══════════════════════════════════════ -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/icon-192.svg" />
-    <title>mazha.live · Kerala Rain Tracker 🌧</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32"   href="/favicon-32-light.png" />
+    <link rel="icon" type="image/png" sizes="32x32"   href="/favicon-32-dark.png"  media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/png" sizes="64x64"   href="/favicon-64-light.png" />
+    <link rel="icon" type="image/png" sizes="128x128" href="/favicon-128-light.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180-light.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192-light.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512-light.png" />
+
+    <!-- ═══════════════════════════════════════
+         OPEN GRAPH
+    ═══════════════════════════════════════ -->
+    <meta property="og:type"             content="website" />
+    <meta property="og:url"              content="https://mazha.live/" />
+    <meta property="og:site_name"        content="mazha.live" />
+    <meta property="og:title"            content="mazha.live – Live Kerala Rain Tracker & Community Rain Map" />
+    <meta property="og:description"      content="Track live rain in Kerala with real-time community reports. See rain intensity and location-wise updates across Kerala districts." />
+    <meta property="og:image"            content="https://mazha.live/og-image.png" />
+    <meta property="og:image:secure_url" content="https://mazha.live/og-image.png" />
+    <meta property="og:image:width"      content="1200" />
+    <meta property="og:image:height"     content="630" />
+    <meta property="og:image:type"       content="image/png" />
+    <meta property="og:image:alt"        content="mazha.live — Live Kerala rain map showing district-wise rain intensity" />
+    <meta property="og:locale"           content="en_IN" />
+
+    <!-- ═══════════════════════════════════════
+         TWITTER / X CARD
+    ═══════════════════════════════════════ -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:site"        content="@mazhalive" />
+    <meta name="twitter:creator"     content="@mazhalive" />
+    <meta name="twitter:title"       content="mazha.live – Live Kerala Rain Tracker" />
+    <meta name="twitter:description" content="Real-time community rain reports across Kerala. Track rain intensity district-wise — mazha.live" />
+    <meta name="twitter:image"       content="https://mazha.live/twitter-card.png" />
+    <meta name="twitter:image:alt"   content="mazha.live — Live Kerala Rain Tracker" />
+
+    <!-- ═══════════════════════════════════════
+         STRUCTURED DATA — JSON-LD
+         Enables Google rich results: sitelinks, app
+         install banners, knowledge panel
+    ═══════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://mazha.live/#website",
+          "url": "https://mazha.live/",
+          "name": "mazha.live",
+          "description": "Real-time community rain reporting map for Kerala",
+          "inLanguage": "en-IN",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://mazha.live/?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://mazha.live/#app",
+          "name": "mazha.live – Kerala Rain Tracker",
+          "url": "https://mazha.live/",
+          "description": "Track live rain in Kerala with real-time community reports. See rain intensity and location-wise updates across all Kerala districts.",
+          "applicationCategory": "WeatherApplication",
+          "operatingSystem": "Any",
+          "browserRequirements": "Requires JavaScript",
+          "inLanguage": "en-IN",
+          "isAccessibleForFree": true,
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "INR"
+          },
+          "screenshot": "https://mazha.live/og-image.png",
+          "featureList": [
+            "Real-time rain reports",
+            "Community rain reporting",
+            "District-wise rain intensity map",
+            "Kerala weather tracking",
+            "Live rain map"
+          ],
+          "areaServed": {
+            "@type": "State",
+            "name": "Kerala",
+            "containedInPlace": {
+              "@type": "Country",
+              "name": "India"
+            }
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://mazha.live/#org",
+          "name": "mazha.live",
+          "url": "https://mazha.live/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://mazha.live/favicon-512-light.png",
+            "width": 512,
+            "height": 512
+          },
+          "sameAs": [
+            "https://twitter.com/mazhalive"
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- ═══════════════════════════════════════
+         PERFORMANCE
+    ═══════════════════════════════════════ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <!--
+      Noscript: Google crawls this text.
+      Keep keyword-rich and accurate.
+    -->
+    <noscript>
+      <div style="padding:2rem;font-family:sans-serif;text-align:center">
+        <h1>mazha.live – Live Kerala Rain Tracker</h1>
+        <p>Real-time community rain reporting map for Kerala. Track rain intensity and get district-wise live rain updates across Kerala.</p>
+        <p>Please enable JavaScript to use mazha.live.</p>
+      </div>
+    </noscript>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

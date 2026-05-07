@@ -17,40 +17,245 @@ function BellIcon({ subscribed }: { subscribed: boolean }) {
 }
 
 /** Raindrop + cloud SVG logo — animated drops */
-function AnimatedLogo({ size = 28 }: { size?: number }) {
-  return (
-    <svg className="header-logo-svg" width={size} height={size} viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="cloudGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#00d4ff"/>
-          <stop offset="100%" stopColor="#0077bb"/>
-        </linearGradient>
-        <linearGradient id="dropGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#00d4ff" stopOpacity="0.9"/>
-          <stop offset="100%" stopColor="#005599" stopOpacity="0.5"/>
-        </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="1.2" result="coloredBlur"/>
-          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-      {/* Cloud body */}
-      <path d="M28 14.5a6 6 0 00-5.5-6A9 9 0 004 13a5.5 5.5 0 00.5 11H28a5.5 5.5 0 000-9.5z" fill="url(#cloudGrad)" filter="url(#glow)" opacity="0.95"/>
-      {/* Rain drops */}
-      <ellipse cx="12" cy="29" rx="1.4" ry="2.4" fill="url(#dropGrad)">
-        <animateTransform attributeName="transform" type="translate" values="0,0;0,5;0,0" dur="1.2s" repeatCount="indefinite" begin="0s"/>
-        <animate attributeName="opacity" values="1;0.1;1" dur="1.2s" repeatCount="indefinite" begin="0s"/>
-      </ellipse>
-      <ellipse cx="18" cy="30" rx="1.4" ry="2.4" fill="url(#dropGrad)">
-        <animateTransform attributeName="transform" type="translate" values="0,0;0,5;0,0" dur="1.2s" repeatCount="indefinite" begin="0.35s"/>
-        <animate attributeName="opacity" values="1;0.1;1" dur="1.2s" repeatCount="indefinite" begin="0.35s"/>
-      </ellipse>
-      <ellipse cx="24" cy="29" rx="1.4" ry="2.4" fill="url(#dropGrad)">
-        <animateTransform attributeName="transform" type="translate" values="0,0;0,5;0,0" dur="1.2s" repeatCount="indefinite" begin="0.7s"/>
-        <animate attributeName="opacity" values="1;0.1;1" dur="1.2s" repeatCount="indefinite" begin="0.7s"/>
-      </ellipse>
-    </svg>
-  );
+function AnimatedLogo({
+  size = 28,
+  dark = false,
+}: {
+  size?: number;
+  dark?: boolean;
+}) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const cv = ref.current;
+
+    if (!cv) return;
+
+    const ctx = cv.getContext("2d")!;
+
+    if (!ctx) return;
+
+    const W = size;
+    const H = size * 1.45;
+    const s = size / 28;
+
+    cv.width = W;
+    cv.height = H;
+
+    const CYCLE = 210;
+
+    let t = 0;
+    let raf = 0;
+
+    const boltPts = (
+      bx: number,
+      by: number
+    ): [number, number][] => [
+      [bx + s * 4, by],
+      [bx - s * 6, by + s * 13],
+      [bx + s * 1, by + s * 13],
+      [bx - s * 4.5, by + s * 27],
+      [bx + s * 7, by + s * 13],
+      [bx + s * 1.5, by + s * 13],
+    ];
+
+    function drawBolt(
+      flash: boolean,
+      alpha: number
+    ) {
+      const bx = W * 0.5;
+      const by = H * 0.04;
+
+      const pts = boltPts(bx, by);
+
+      ctx.save();
+
+      ctx.globalAlpha = alpha;
+
+      if (flash) {
+        ctx.fillStyle = "#ffffff";
+      } else {
+        const g = ctx.createLinearGradient(
+          bx - s * 6,
+          by,
+          bx + s * 7,
+          by + s * 27
+        );
+
+        g.addColorStop(
+          0,
+          dark ? "#40c4ff" : "#29b6f6"
+        );
+
+        g.addColorStop(
+          0.5,
+          dark ? "#1976d2" : "#1565c0"
+        );
+
+        g.addColorStop(
+          1,
+          dark ? "#283593" : "#1a237e"
+        );
+
+        ctx.fillStyle = g;
+      }
+
+      ctx.beginPath();
+
+      pts.forEach(([x, y], i) => {
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+
+      ctx.closePath();
+      ctx.fill();
+
+      if (!flash) {
+        ctx.fillStyle = dark
+          ? "rgba(10,20,70,0.28)"
+          : "rgba(10,20,80,0.22)";
+
+        const bx2 = bx;
+        const by2 = by;
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+          bx2 + s * 1,
+          by2 + s * 4
+        );
+
+        ctx.lineTo(
+          bx2 - s * 2,
+          by2 + s * 13
+        );
+
+        ctx.lineTo(
+          bx2 + s * 1,
+          by2 + s * 13
+        );
+
+        ctx.lineTo(
+          bx2 - s * 1.5,
+          by2 + s * 24
+        );
+
+        ctx.lineTo(
+          bx2 + s * 3.5,
+          by2 + s * 14
+        );
+
+        ctx.lineTo(
+          bx2 + s * 0.5,
+          by2 + s * 14
+        );
+
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    const drops = [
+      { xf: 0.22, phase: 0, len: 2.4 },
+      { xf: 0.4, phase: 0.28, len: 2.0 },
+      { xf: 0.58, phase: 0.55, len: 2.5 },
+      { xf: 0.76, phase: 0.82, len: 2.2 },
+    ];
+
+    function drawRain(
+      time: number,
+      flash: boolean
+    ) {
+      drops.forEach((d) => {
+        const prog =
+          ((time / 48 + d.phase) % 1);
+
+        const y =
+          H * 0.04 + prog * H * 0.9;
+
+        const a =
+          prog < 0.7
+            ? 0.85
+            : 0.85 *
+              (1 - (prog - 0.7) / 0.3);
+
+        ctx.save();
+
+        ctx.globalAlpha = a;
+
+        ctx.fillStyle = flash
+          ? dark
+            ? "rgba(200,240,255,0.9)"
+            : "rgba(160,220,255,0.7)"
+          : dark
+          ? "#5ab4e0"
+          : "#4a9fd4";
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+          W * d.xf,
+          y,
+          s * 1.0,
+          s * d.len,
+          0,
+          0,
+          Math.PI * 2
+        );
+
+        ctx.fill();
+
+        ctx.restore();
+      });
+    }
+
+    function frame() {
+      t++;
+
+      ctx.clearRect(0, 0, W, H);
+
+      const cf = t % CYCLE;
+
+      let flash = false;
+      let alpha = 1;
+
+      if (cf >= 130 && cf < 133) {
+        flash = true;
+        alpha = 0.04;
+      } else if (cf >= 133 && cf < 137) {
+        flash = true;
+        alpha = 1;
+      } else if (cf >= 137 && cf < 139) {
+        flash = true;
+        alpha = 0.04;
+      } else if (cf >= 139 && cf < 142) {
+        flash = false;
+        alpha = 0.65;
+      } else if (cf >= 142 && cf < 144) {
+        flash = false;
+        alpha = 0.08;
+      }
+
+      drawBolt(flash, alpha);
+
+      drawRain(t, flash);
+
+      raf = requestAnimationFrame(frame);
+    }
+
+    raf = requestAnimationFrame(frame);
+
+    return () => {
+      cancelAnimationFrame(raf);
+    };
+  }, [size, dark]);
+
+  return <canvas ref={ref} />;
 }
 
 /** Rain particle background FX */
@@ -105,7 +310,6 @@ function AppShell() {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', position:'relative', zIndex:1 }}>
-      <RainFX/>
       <header className="header">
         <div className="header-brand">
           <AnimatedLogo size={28}/>

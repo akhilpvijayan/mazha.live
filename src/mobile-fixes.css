@@ -126,14 +126,14 @@
     cursor: pointer !important;
     transition: all .2s !important;
     color: var(--text2) !important;
-    z-index: 600 !important;
+    z-index: 10003 !important;
     -webkit-tap-highlight-color: transparent !important;
   }
   .map-fullscreen-btn:active { transform: scale(0.94) !important; }
 
   /* Expand icon (default) */
   .map-fullscreen-btn .icon-expand  { display: block !important; }
-  .map-fullscreen-btn .icon-exit-fs { display: none  !important; }
+  .map-fullscreen-btn .icon-exit-fs { display: block  !important; }
 
   /* ── Fullscreen mode ── */
 
@@ -157,9 +157,10 @@
 
   /* Keep map-tools visible but only the fullscreen button */
   body.map--fullscreen .map-tools {
-    top: 12px !important;
-    right: 12px !important;
-    z-index: 9999 !important;
+    display: flex !important;
+    right: 16px !important;
+    top: 16px !important;
+    z-index: 1001;
   }
 
   /* Hide reset / heatmap btns in fullscreen, keep only fullscreen btn */
@@ -216,7 +217,7 @@
     gap: 6px;
     display: flex !important;
     align-items: center !important;
-    z-index: 601;
+    z-index: 1001;
   }
 
   .pwa-banner-bar__icon     { display: none !important; }
