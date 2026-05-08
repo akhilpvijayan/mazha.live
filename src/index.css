@@ -373,7 +373,7 @@
   /* ── LAST UPDATED ── */
   .last-updated {
     position: absolute;
-    bottom: 16px;
+    bottom: 30px;
     left: 16px;
     z-index: 550;
     display: flex;
@@ -410,7 +410,7 @@
   /* ── FAB ── */
   .report-fab {
     position: absolute;
-    bottom: 32px;
+    bottom: 40px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 600;
@@ -446,7 +446,7 @@
   /* ── FLOATING SIDEBAR ── */
   .float-sidebar {
     position: absolute;
-    top: 16px; right: 16px; bottom: 16px;
+    top: 16px; right: 16px; bottom: 35px;
     width: 292px;
     z-index: 550;
     background: rgba(8,12,20,0.90);
@@ -1231,7 +1231,7 @@ body.map--fullscreen .live-feed-panel { display:none }
   
     .report-fab {
       left: 50% !important;
-      bottom: 24px !important;
+      bottom: 40px !important;
       transform: translateX(-50%) !important;
     }
     .report-fab:hover  { transform:translateX(-50%) scale(1.05) translateY(-2px) !important }
@@ -1602,4 +1602,22 @@ body.map--fullscreen .live-feed-panel { display:none }
   .leaflet-control-attribution a {
     color: rgba(0, 0, 0, 0.25) !important;
   }
+}
+
+.map-ad-strip {
+  background: rgba(7, 14, 26, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+[data-theme="light"] .map-ad-strip {
+  background: rgba(238, 244, 255, 0.88);
+  border-top: 1px solid rgba(0, 50, 120, 0.08);
+}
+[data-theme="light"] .map-ad-label {
+  color: rgba(10, 22, 50, 0.38) !important;
+}
+
+.fsb-divider {
+  border: none;
+  border-top: 1px solid #dddddd3d;
+  margin: 12px 0;
 }

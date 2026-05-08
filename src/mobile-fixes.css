@@ -11,7 +11,7 @@
 @media (max-width: 768px) {
   :root {
     --bottom-nav-h: 0px;          /* nav is gone — reset so FAB math still works */
-    --fab-bottom:   50px;         /* FAB sits 20px above viewport bottom */
+    --fab-bottom:   60px;         /* FAB sits 20px above viewport bottom */
     --nav-btn-bar-h: 52px;        /* height of the inline button row below search */
   }
 }
@@ -319,7 +319,7 @@
   .info-disclaimer-chip {
     display: flex !important;
     position: absolute !important;
-    bottom: 12px !important;          /* v2: sits 12px above viewport bottom (no nav) */
+    bottom: 30px !important;          /* v2: sits 12px above viewport bottom (no nav) */
     right: auto !important;
     left: 8px !important;
     font-size: 6.5px;
