@@ -18,6 +18,7 @@ import {
 } from './Icons';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useKeyboardAvoid } from '../hooks/useKeyboardAvoid';
+import { useSWAutoRefresh } from '../hooks/useSWAutoRefresh';
 import { NotificationSettingsModal } from './NotificationSettings';
 import { WalkthroughTour } from './Walkthroughtour';
 import { AdBanner } from './ads/AdBanner';
@@ -117,6 +118,7 @@ export default function MapView() {
   const { canInstall, install } = usePWAInstall();
   const [showTour, setShowTour] = useState(false);
   useKeyboardAvoid();
+  useSWAutoRefresh(20_000);
 
   /* ── state ── */
   const [geo, setGeo] = useState<any>(null);
@@ -243,8 +245,8 @@ export default function MapView() {
     };
 
     fetchReports();
-    // Auto-reload data every 10 seconds
-    const interval = setInterval(fetchReports, 10000);
+    // Auto-reload data every 20 seconds (aligned with SW cache refresh)
+    const interval = setInterval(fetchReports, 20_000);
     return () => clearInterval(interval);
   }, []);
 
