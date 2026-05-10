@@ -1,4 +1,4 @@
-﻿import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { getPincodeData } from '../services/pincodeService';
@@ -17,6 +17,7 @@ import {
   IconCloudRain, IconMapPin, IconFire, IconActivity, IconBarChart, IconAlertTriangle, IconShare, IconSearch, IconInstall,
 } from './Icons';
 import { usePWAInstall } from '../hooks/usePWAInstall';
+import { useKeyboardAvoid } from '../hooks/useKeyboardAvoid';
 import { NotificationSettingsModal } from './NotificationSettings';
 import { WalkthroughTour } from './Walkthroughtour';
 import { AdBanner } from './ads/AdBanner';
@@ -115,6 +116,7 @@ export default function MapView() {
   const { theme } = useTheme();
   const { canInstall, install } = usePWAInstall();
   const [showTour, setShowTour] = useState(false);
+  useKeyboardAvoid();
 
   /* ── state ── */
   const [geo, setGeo] = useState<any>(null);
@@ -215,15 +217,17 @@ export default function MapView() {
           if (Object.keys(data).length) setRainData(data);
           setLastUpdated(0);
         });
-        // Also fetch last 2h individual events for live feed
-        const since2h = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        // Also fetch last 48h individual events for live feed (2h = active, 2-48h = faded)
+        const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+        const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
         supabase?.from('rain_reports')
           .select('id, pin, place, district, intensity, reported_at')
-          .gte('reported_at', since2h)
+          .gte('reported_at', since48h)
           .order('reported_at', { ascending: false })
-          .limit(50)
+          .limit(200)
           .then(({ data: rows }) => {
             if (rows) {
+              const fetchNow = Date.now();
               setLiveEvents(rows.map((r: any) => ({
                 id: r.id,
                 pin: r.pin,
@@ -231,6 +235,7 @@ export default function MapView() {
                 district: r.district,
                 intensity: parseFloat(r.intensity) || 0,
                 ts: new Date(r.reported_at).getTime(),
+                faded: (fetchNow - new Date(r.reported_at).getTime()) >= TWO_HOURS_MS,
               })));
             }
           });
@@ -254,8 +259,8 @@ export default function MapView() {
           ? { ...prev, [raw.pin]: { ...ex, total: ex.total + raw.intensity, count: ex.count + 1, lastUpdated: ts, lastIntensity: raw.intensity } }
           : { ...prev, [raw.pin]: { pin: raw.pin, place: raw.place, district: raw.district, lat: raw.lat, lng: raw.lng, total: raw.intensity, count: 1, lastUpdated: ts, firstReport: ts, lastIntensity: raw.intensity } };
       });
-      // Append to individual live events list (keep last 50)
-      setLiveEvents(prev => [{ id: raw.id, pin: raw.pin, place: raw.place, district: raw.district, intensity: raw.intensity, ts }, ...prev].slice(0, 50));
+      // Append to individual live events list (keep last 200, new events are never faded)
+      setLiveEvents(prev => [{ id: raw.id, pin: raw.pin, place: raw.place, district: raw.district, intensity: raw.intensity, ts, faded: false }, ...prev].slice(0, 200));
       setLastUpdated(0);
     });
     return () => { channel?.unsubscribe(); };
@@ -503,16 +508,22 @@ export default function MapView() {
               <div className="lf-live-dot" />
               Live Reports
             </div>
-            <div className="lf-count">{liveEvents.length} events</div>
+            <div className="lf-count">
+              {liveEvents.filter(e => !e.faded).length} active
+              {liveEvents.filter(e => e.faded).length > 0 && (
+                <span style={{ color: 'var(--text3)', marginLeft: 4 }}>· {liveEvents.filter(e => e.faded).length} faded</span>
+              )}
+            </div>
           </div>
           <div className="lf-body">
             {liveEvents.slice(0, 20).map((ev, idx) => {
               const level = getLevel(ev.intensity);
               const cssClass =
-                level === 'extreme' ? 'lf-extreme' :
-                  level === 'heavy' ? 'lf-heavy' :
-                    level === 'moderate' ? 'lf-moderate' :
-                      'lf-active';
+                ev.faded ? 'lf-active' :
+                  level === 'extreme' ? 'lf-extreme' :
+                    level === 'heavy' ? 'lf-heavy' :
+                      level === 'moderate' ? 'lf-moderate' :
+                        'lf-active';
               const label =
                 level === 'extreme' ? 'Extreme' :
                   level === 'heavy' ? 'Heavy' :
@@ -522,11 +533,13 @@ export default function MapView() {
                 <div
                   key={`${ev.id}-${ev.ts}`}
                   className={`lf-item ${cssClass}`}
-                  style={{ animationDelay: `${idx * 50}ms` }}
+                  style={{ animationDelay: `${idx * 50}ms`, opacity: ev.faded ? 0.45 : 1 }}
                   onClick={() => handleSelect(ev.pin)}
                 >
-                  <div className="lf-status-dot" />
-                  <span className="lf-status-label">{label}</span>
+                  <div className="lf-status-dot" style={ev.faded ? { background: '#6b7a8d' } : {}} />
+                  <span className="lf-status-label" style={ev.faded ? { color: '#6b7a8d' } : {}}>
+                    {ev.faded ? 'Faded' : label}
+                  </span>
                   <span className="lf-place">{ev.place}</span>
                   <span className="lf-sub">{ev.district} · {ev.pin}</span>
                   <span className="lf-time">{fmtTime(ev.ts, t)}</span>

@@ -19,6 +19,7 @@ export interface LiveEvent {
   district:  string;
   intensity: number;
   ts:        number;   // ms timestamp
+  faded?:    boolean;  // true if > 2h old (ghost period)
 }
 
 /** A single raw report row from Supabase */

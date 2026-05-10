@@ -1092,3 +1092,33 @@
   .brand-live { font-size: 10.5px; }
   .header-logo-svg { width: 22px; height: 22px; }
 }
+
+/* ─────────────────────────────────────────────────────────
+   21. KEYBOARD AVOIDANCE  (mobile only)
+   --kb-offset is written by useKeyboardAvoid hook via JS.
+   When the software keyboard opens, the backdrop gains
+   padding-bottom equal to the keyboard height, which lifts
+   the bottom-anchored sheet above the keyboard.
+   ───────────────────────────────────────────────────────── */
+:root {
+  --kb-offset: 0px;
+}
+
+@media (max-width: 768px) {
+  /* Lift the whole backdrop's bottom edge above the keyboard */
+  .modal-backdrop {
+    padding-bottom: var(--kb-offset, 0px) !important;
+    transition: padding-bottom 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Clamp sheet height so it fits in the remaining visible space */
+  .modal-sheet {
+    max-height: min(
+      60vh,
+      calc(100dvh - var(--kb-offset, 0px) - 24px)
+    ) !important;
+    transition: max-height 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    will-change: max-height;
+  }
+}
