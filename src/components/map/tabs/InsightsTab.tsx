@@ -11,10 +11,19 @@ export function InsightsTab({ reports, now }: { reports: RainReport[]; now: numb
   const active = reports.filter(r => !isGhost(r, now)); const ghosts = reports.filter(r => isGhost(r, now));
   const totalRpts = reports.reduce((s, r) => s + r.count, 0);
   const avgs = active.map(r => currentAvgIntensity(r, now));
-  const maxMm = avgs.length ? Math.max(...avgs) : 0; const avgMm = avgs.length ? avgs.reduce((a, b) => a + b, 0) / avgs.length : 0;
+  const maxMm = avgs.length ? Math.max(...avgs) : 0; 
+  const validAvgs = avgs.filter(mm => mm > 4);
+  const avgMm = validAvgs.length ? validAvgs.reduce((a, b) => a + b, 0) / validAvgs.length : 0;
   const heavyCnt = active.filter(r => currentAvgIntensity(r, now) > 50).length;
   const dm: Record<string, { total: number; count: number }> = {};
-  active.forEach(r => { if (!dm[r.district]) dm[r.district] = { total: 0, count: 0 }; dm[r.district].total += currentAvgIntensity(r, now); dm[r.district].count += 1; });
+  active.forEach(r => { 
+    const eff = currentAvgIntensity(r, now);
+    if (eff > 4) {
+      if (!dm[r.district]) dm[r.district] = { total: 0, count: 0 }; 
+      dm[r.district].total += eff; 
+      dm[r.district].count += 1; 
+    }
+  });
   const districts = Object.entries(dm).map(([name, d]) => ({ name, avg: d.total / d.count })).sort((a, b) => b.avg - a.avg).slice(0, 6);
   const maxDist = districts[0]?.avg || 1;
   return <div>

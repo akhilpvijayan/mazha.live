@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { RainReport } from '../../../types';
-import { currentAvgIntensity } from '../../../services/supabase';
+import { currentAvgIntensity, isGhost } from '../../../services/supabase';
 import { getIntensityLabel } from '../../../utils/kerala';
 import { IconCloudRain, IconCopy, IconMapPin, IconShare, IconWhatsApp, IconX } from '../../Icons';
 import { ShareSheet, buildDistrictShareText, waShare, copyText } from '../modals/ShareSheet';
@@ -10,15 +10,18 @@ import { INTENSITY_OPTIONS } from './ReportModal';
 
 export function DistrictShareModal({ reports, now, onClose }: { reports: RainReport[]; now: number; onClose: () => void }) {
   const [shareData, setShareData] = useState<{ title: string; text: string } | null>(null);
+  const activeReports = reports.filter(r => !isGhost(r, now));
   const dm: Record<string, RainReport[]> = {};
-  reports.forEach(r => { if (!dm[r.district]) dm[r.district] = []; dm[r.district].push(r); });
+  activeReports.forEach(r => { if (!dm[r.district]) dm[r.district] = []; dm[r.district].push(r); });
   const districts = Object.entries(dm).map(([name, rpts]) => {
-    const avgs = rpts.map(r => currentAvgIntensity(r, now));
-    return { name, reports: rpts, avg: avgs.reduce((a, b) => a + b, 0) / avgs.length, max: Math.max(...avgs) };
+    const validAvgs = rpts.filter(r => currentAvgIntensity(r, now) > 4).map(r => currentAvgIntensity(r, now));
+    const allAvgs = rpts.map(r => currentAvgIntensity(r, now));
+    const avg = validAvgs.length ? validAvgs.reduce((a, b) => a + b, 0) / validAvgs.length : 0;
+    return { name, reports: rpts, avg, max: allAvgs.length ? Math.max(...allAvgs) : 0 };
   }).sort((a, b) => b.avg - a.avg);
   return (<>
     <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-sheet" style={{ maxHeight: '88vh' }}>
+      <div className="modal-sheet district-modal">
         <div className="modal-handle" />
         <div className="modal-header"><div className="modal-title">District Reports</div><button className="modal-close" onClick={onClose}><IconX size={14} /></button></div>
         <div style={{ overflowY: 'auto', flex: 1, padding: '12px 16px' }}>

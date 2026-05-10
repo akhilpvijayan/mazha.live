@@ -28,9 +28,10 @@ function buildShareText(pin: string, place: string, district: string, avg: numbe
 }
 
 function buildDistrictShareText(district: string, rpts: RainReport[]) {
-    const avgs = rpts.map(r => currentAvgIntensity(r));
-    const max = Math.max(...avgs);
-    const avg = avgs.reduce((a, b) => a + b, 0) / avgs.length;
+    const validAvgs = rpts.filter(r => currentAvgIntensity(r) > 4).map(r => currentAvgIntensity(r));
+    const allAvgs = rpts.map(r => currentAvgIntensity(r));
+    const max = allAvgs.length ? Math.max(...allAvgs) : 0;
+    const avg = validAvgs.length ? validAvgs.reduce((a, b) => a + b, 0) / validAvgs.length : 0;
     const lines = rpts.slice(0, 3).map(r => `  • ${r.place}: ${currentAvgIntensity(r).toFixed(0)} mm/hr`).join('\n');
     return `🌧️ *Mazha.Live — ${district} District Rain*\n\n📊 ${rpts.length} active location${rpts.length !== 1 ? 's' : ''}\n💧 Peak: *${max.toFixed(1)} mm/hr* | Avg: ${avg.toFixed(1)} mm/hr\n📌 Hotspots:\n${lines}\n\n🔗 Live rain map → https://mazha.live`;
   }

@@ -249,9 +249,9 @@ import {
             }} />
   
             {/* Header */}
-            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem 0.85rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 15, color: '#e2eaf6', letterSpacing: -0.3 }}>
-                <IconHeart size={18} style={{ color: '#29b6f6' }} />
+            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem 0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800, fontSize: 14, color: '#e2eaf6', letterSpacing: -0.3 }}>
+                <IconHeart size={16} style={{ color: '#29b6f6' }} />
                 Support mazha.live
               </div>
               <button
@@ -265,24 +265,24 @@ import {
             </div>
   
             {/* Hero */}
-            <div style={{ flexShrink: 0, margin: '0 1.25rem 1rem', padding: '1rem 1.1rem', background: 'linear-gradient(135deg, rgba(41,182,246,0.08), rgba(21,101,192,0.04))', border: '1px solid rgba(41,182,246,0.12)', borderRadius: 12, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ flexShrink: 0, margin: '0 1rem 0.75rem', padding: '0.75rem 0.85rem', background: 'linear-gradient(135deg, rgba(41,182,246,0.08), rgba(21,101,192,0.04))', border: '1px solid rgba(41,182,246,0.12)', borderRadius: 12, position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at top right, rgba(41,182,246,0.1), transparent 60%)', pointerEvents: 'none' }} />
               <div style={{ position: 'relative' }}>
-                <div style={{ fontWeight: 800, fontSize: 16, color: '#e2eaf6', lineHeight: 1.25, marginBottom: 4 }}>One dev. Zero salary. Endless rain alerts.</div>
-                <div style={{ fontSize: 12.5, color: 'rgba(180,200,230,0.5)', lineHeight: 1.5 }}>
+                <div style={{ fontWeight: 800, fontSize: 14, color: '#e2eaf6', lineHeight: 1.2, marginBottom: 3 }}>One dev. Zero salary. Endless rain alerts.</div>
+                <div style={{ fontSize: 11.5, color: 'rgba(180,200,230,0.5)', lineHeight: 1.4 }}>
                   Running on{' '}
                   <span style={{ color: '#29b6f6', fontWeight: 600, opacity: fuelVisible ? 1 : 0, transition: 'opacity 0.3s', display: 'inline-block' }}>
                     {FUEL_WORDS[fuelIdx]}
                   </span>{' '}
                   and the fear of Kerala going offline during peak monsoon.
                 </div>
-                <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: '3px 10px', fontSize: 11, color: 'rgba(180,200,230,0.5)' }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80', animation: 'mzSupportBlink 1.5s ease infinite' }} />
+                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: '2px 8px', fontSize: 10, color: 'rgba(180,200,230,0.5)' }}>
+                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80', animation: 'mzSupportBlink 1.5s ease infinite' }} />
                     Live right now
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: '3px 10px', fontSize: 11, color: 'rgba(180,200,230,0.5)' }}>
-                    <IconUsers size={11} style={{ color: '#29b6f6', flexShrink: 0 }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: '2px 8px', fontSize: 10, color: 'rgba(180,200,230,0.5)' }}>
+                    <IconUsers size={10} style={{ color: '#29b6f6', flexShrink: 0 }} />
                     {reporterCount} reporters today
                   </div>
                 </div>
@@ -293,12 +293,12 @@ import {
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' as any }}>
   
               {/* Tier label */}
-              <div style={{ padding: '0 1.25rem', fontSize: 10.5, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'rgba(180,200,230,0.4)', marginBottom: 8 }}>
+              <div style={{ padding: '0 1rem', fontSize: 9.5, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'rgba(180,200,230,0.4)', marginBottom: 6 }}>
                 Pick your weapon
               </div>
   
               {/* Tiers */}
-              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6, padding: '0 1.25rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 5, padding: '0 1rem' }}>
                 {SUPPORT_TIERS.map((t, i) => {
                   const Icon = t.icon;
                   const active = i === selected && !isCustom;
@@ -307,95 +307,95 @@ import {
                       key={t.name}
                       onClick={() => handleSelectTier(i)}
                       style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '9px 11px', borderRadius: 10, textAlign: 'left' as const,
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '7px 9px', borderRadius: 9, textAlign: 'left' as const,
                         border: `1px solid ${active ? 'rgba(41,182,246,0.5)' : 'rgba(255,255,255,0.07)'}`,
                         background: active ? 'linear-gradient(135deg, rgba(41,182,246,0.1), rgba(21,101,192,0.06))' : 'rgba(255,255,255,0.02)',
                         cursor: 'pointer', color: 'inherit',
-                        transform: active ? 'translateX(3px)' : 'translateX(0)',
+                        transform: active ? 'translateX(2px)' : 'translateX(0)',
                         transition: 'all 0.2s cubic-bezier(0.34,1.56,0.64,1)',
                         position: 'relative' as const, overflow: 'hidden',
                       }}
                     >
                       {active && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, borderRadius: '0 2px 2px 0', background: '#29b6f6' }} />}
                       {t.hot && (
-                        <div style={{ position: 'absolute', top: 6, right: 48, background: 'linear-gradient(90deg,#f59e0b,#f97316)', color: '#fff', fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8, letterSpacing: '.04em' }}>
+                        <div style={{ position: 'absolute', top: 5, right: 42, background: 'linear-gradient(90deg,#f59e0b,#f97316)', color: '#fff', fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 6, letterSpacing: '.04em' }}>
                           POPULAR
                         </div>
                       )}
-                      <div style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: active ? 'rgba(41,182,246,0.15)' : 'rgba(255,255,255,0.05)', color: '#29b6f6', boxShadow: active ? '0 0 12px rgba(41,182,246,0.3)' : 'none', transition: 'all 0.2s' }}>
-                        <Icon size={17} />
+                      <div style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: active ? 'rgba(41,182,246,0.15)' : 'rgba(255,255,255,0.05)', color: '#29b6f6', boxShadow: active ? '0 0 10px rgba(41,182,246,0.3)' : 'none', transition: 'all 0.2s' }}>
+                        <Icon size={15} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13.5, fontWeight: 600, color: '#e2eaf6', lineHeight: 1.2 }}>{t.name}</div>
-                        <div style={{ fontSize: 11, color: 'rgba(180,200,230,0.45)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#e2eaf6', lineHeight: 1.2 }}>{t.name}</div>
+                        <div style={{ fontSize: 10, color: 'rgba(180,200,230,0.45)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {active ? t.funny : t.desc}
                         </div>
                       </div>
-                      <div style={{ fontWeight: 800, fontSize: 15, color: '#29b6f6', flexShrink: 0 }}>₹{t.amount}</div>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: '#29b6f6', flexShrink: 0 }}>₹{t.amount}</div>
                     </button>
                   );
                 })}
               </div>
   
               {/* Custom amount */}
-              <div style={{ padding: '0.75rem 1.25rem 0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: `1px solid ${isCustom ? 'rgba(41,182,246,0.5)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.02)', boxShadow: isCustom ? '0 0 0 3px rgba(41,182,246,0.08)' : 'none', transition: 'all 0.2s' }}>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: '#29b6f6' }}>₹</span>
+              <div style={{ padding: '0.6rem 1rem 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${isCustom ? 'rgba(41,182,246,0.5)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 9, padding: '6px 10px', background: 'rgba(255,255,255,0.02)', boxShadow: isCustom ? '0 0 0 3px rgba(41,182,246,0.08)' : 'none', transition: 'all 0.2s' }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: '#29b6f6' }}>₹</span>
                   <input
                     type="number" placeholder="Feeling generous? Enter amount" value={customAmount} min={1}
                     onFocus={() => setIsCustom(true)}
                     onChange={(e) => { setCustomAmount(e.target.value); setIsCustom(true); }}
-                    style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontFamily: "'Outfit', sans-serif", fontSize: 14, color: '#e2eaf6' }}
+                    style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontFamily: "'Outfit', sans-serif", fontSize: 13, color: '#e2eaf6' }}
                   />
                 </div>
               </div>
   
               {/* Pay button */}
-              <div style={{ padding: '0.85rem 1.25rem 0' }}>
+              <div style={{ padding: '0.6rem 1rem 0' }}>
                 <button
                   onClick={handlePay}
-                  style={{ width: '100%', padding: '13px 20px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #1976d2 0%, #0d47a1 100%)', color: '#fff', fontFamily: "'Outfit', sans-serif", fontSize: 16, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', letterSpacing: -0.2, boxShadow: '0 4px 20px rgba(21,101,192,0.4)', transition: 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)', position: 'relative' as const, overflow: 'hidden' }}
-                  onMouseEnter={(e) => { const b = e.currentTarget; b.style.transform = 'translateY(-2px) scale(1.01)'; b.style.boxShadow = '0 8px 30px rgba(21,101,192,0.55)'; }}
-                  onMouseLeave={(e) => { const b = e.currentTarget; b.style.transform = 'none'; b.style.boxShadow = '0 4px 20px rgba(21,101,192,0.4)'; }}
+                  style={{ width: '100%', padding: '11px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #1976d2 0%, #0d47a1 100%)', color: '#fff', fontFamily: "'Outfit', sans-serif", fontSize: 15, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', letterSpacing: -0.2, boxShadow: '0 4px 16px rgba(21,101,192,0.4)', transition: 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)', position: 'relative' as const, overflow: 'hidden' }}
+                  onMouseEnter={(e) => { const b = e.currentTarget; b.style.transform = 'translateY(-2px) scale(1.01)'; b.style.boxShadow = '0 8px 24px rgba(21,101,192,0.55)'; }}
+                  onMouseLeave={(e) => { const b = e.currentTarget; b.style.transform = 'none'; b.style.boxShadow = '0 4px 16px rgba(21,101,192,0.4)'; }}
                   onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.98)'; }}
                   onMouseUp={(e)   => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px) scale(1.01)'; }}
                 >
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg,rgba(255,255,255,0.12),transparent)', pointerEvents: 'none' }} />
-                  <GPay style={{ height: 18, width: 'auto', flexShrink: 0, filter: 'brightness(0) invert(1)' }} />
+                  <GPay style={{ height: 16, width: 'auto', flexShrink: 0, filter: 'brightness(0) invert(1)' }} />
                   <span>Pay</span>
-                  <span style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 6, padding: '2px 8px', fontSize: 14 }}>₹{finalAmount}</span>
+                  <span style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 5, padding: '2px 6px', fontSize: 13 }}>₹{finalAmount}</span>
                 </button>
               </div>
   
               {/* Pay note */}
-              <div style={{ padding: '0.4rem 1.25rem 0', fontSize: 10.5, color: 'rgba(180,200,230,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                <IconLock size={11} style={{ color: '#29b6f6', opacity: 0.6 }} />
+              <div style={{ padding: '0.3rem 1rem 0', fontSize: 9.5, color: 'rgba(180,200,230,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                <IconLock size={10} style={{ color: '#29b6f6', opacity: 0.6 }} />
                 Secure UPI · Your money goes directly to server bills
               </div>
   
               {/* QR toggle */}
               <button
                 onClick={() => setShowQR((p) => !p)}
-                style={{ width: 'calc(100% - 2.5rem)', margin: '0.6rem 1.25rem 0', padding: '8px 14px', borderRadius: 8, border: `1px dashed ${showQR ? 'rgba(41,182,246,0.4)' : 'rgba(255,255,255,0.07)'}`, background: 'transparent', color: showQR ? '#29b6f6' : 'rgba(180,200,230,0.4)', cursor: 'pointer', fontFamily: "'Outfit', sans-serif", fontSize: 12.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, transition: 'all 0.2s' }}
+                style={{ width: 'calc(100% - 2rem)', margin: '0.4rem 1rem 0', padding: '6px 12px', borderRadius: 8, border: `1px dashed ${showQR ? 'rgba(41,182,246,0.4)' : 'rgba(255,255,255,0.07)'}`, background: 'transparent', color: showQR ? '#29b6f6' : 'rgba(180,200,230,0.4)', cursor: 'pointer', fontFamily: "'Outfit', sans-serif", fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s' }}
               >
-                <IconQrcode size={14} />
+                <IconQrcode size={12} />
                 {showQR ? 'Hide QR — you actually clicked it 😎' : 'Show QR — for the button-averse 😌'}
               </button>
   
               {/* QR box */}
               {showQR && (
-                <div style={{ margin: '0.7rem 1.25rem 0', padding: '1rem', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 8 }}>
-                  <img src={qrUrl} alt="UPI QR Code" style={{ width: 140, height: 140, borderRadius: 8, background: '#fff', padding: 4 }} />
-                  <p style={{ fontSize: 11, color: 'rgba(180,200,230,0.4)', textAlign: 'center' as const }}>
+                <div style={{ margin: '0.5rem 1rem 0', padding: '0.75rem', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 6 }}>
+                  <img src={qrUrl} alt="UPI QR Code" style={{ width: 120, height: 120, borderRadius: 8, background: '#fff', padding: 4 }} />
+                  <p style={{ fontSize: 10, color: 'rgba(180,200,230,0.4)', textAlign: 'center' as const }}>
                     Scan with any UPI app · Works when buttons feel like too much effort 💀
                   </p>
                 </div>
               )}
   
               {/* Footer */}
-              <div style={{ padding: '0.85rem 1.25rem 1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 11, color: 'rgba(180,200,230,0.35)' }}>
-                <IconHeart size={12} style={{ color: '#29b6f6', opacity: 0.6 }} />
+              <div style={{ padding: '0.6rem 1rem 0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontSize: 10, color: 'rgba(180,200,230,0.35)' }}>
+                <IconHeart size={10} style={{ color: '#29b6f6', opacity: 0.6 }} />
                 Built with love for Kerala · mazha.live
               </div>
   

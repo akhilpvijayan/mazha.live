@@ -1,0 +1,283 @@
+/* ── LEAFLET ── */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  background: #060d1a !important;
+  font-family: var(--ff) !important;
+}
+
+[data-theme="light"] .leaflet-container {
+  background: #b8cfe8 !important
+}
+
+.leaflet-control-attribution {
+  background: rgba(6, 13, 26, 0.7) !important;
+  color: var(--text3) !important;
+  font-size: 9px !important;
+}
+
+[data-theme="light"] .leaflet-control-attribution {
+  background: rgba(220, 235, 255, 0.85) !important
+}
+
+.leaflet-control-zoom {
+  border: 1px solid var(--border2) !important;
+  border-radius: 9px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+.leaflet-control-zoom a {
+  background: var(--card) !important;
+  color: var(--text2) !important;
+  border-color: var(--border) !important;
+  transition: all .15s !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--card2) !important;
+  color: var(--text) !important
+}
+
+
+/* ── FULLSCREEN MODE ── */
+body.map--fullscreen .bottom-nav,
+body.map--fullscreen .nav-btn-row,
+body.map--fullscreen .info-footer,
+body.map--fullscreen .pwa-banner-bar,
+body.map--fullscreen .map-banner,
+body.map--fullscreen .mobile-pin-fab,
+body.map--fullscreen .report-fab,
+body.map--fullscreen .info-disclaimer-chip,
+body.map--fullscreen .last-updated,
+body.map--fullscreen .mobile-live-sheet,
+body.map--fullscreen header,
+body.map--fullscreen .header,
+body.map--fullscreen .float-sidebar,
+body.map--fullscreen .engage-panel {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.map--fullscreen .map-tools {
+  display: flex !important;
+  right: 16px !important;
+  top: 16px !important;
+  z-index: 10000 !important;
+}
+
+body.map--fullscreen .map-tool-btn:not(.map-fullscreen-btn) {
+  display: none !important;
+}
+
+body.map--fullscreen .map-fullscreen-btn .icon-expand {
+  display: none !important;
+}
+
+body.map--fullscreen .map-fullscreen-btn .icon-exit-fs {
+  display: block !important;
+}
+
+body.map--fullscreen .map-fullscreen-btn {
+  background: var(--surface1, rgba(30, 30, 30, .9)) !important;
+  border-color: var(--accent, #3b82f6) !important;
+  box-shadow: 0 0 0 2px var(--accent, #3b82f6), 0 4px 16px rgba(0, 0, 0, .5) !important;
+  color: var(--accent, #3b82f6) !important;
+}
+
+body.map--fullscreen #root {
+  height: 100vh
+}
+
+body.map--fullscreen .map-shell,
+body.map--fullscreen #map,
+body.map--fullscreen .leaflet-container {
+  height: 100vh !important;
+  height: 100dvh !important;
+  width: 100vw !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9990 !important;
+  border-radius: 0 !important;
+}
+
+
+/* ── MAP TOOLS ── */
+.map-tools {
+  position: absolute;
+  top: 16px;
+  right: 324px;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: right .3s;
+}
+
+.map-tool-btn {
+  width: 38px;
+  height: 38px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .35);
+  transition: all .2s;
+}
+
+.map-tool-btn:hover {
+  background: var(--card2);
+  color: var(--text);
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .4);
+}
+
+.map-tool-btn.on {
+  background: rgba(26, 111, 255, 0.15);
+  border-color: rgba(26, 111, 255, 0.4);
+  color: var(--cyan);
+  box-shadow: 0 0 14px rgba(26, 111, 255, 0.25);
+}
+
+[data-theme="light"] .map-tool-btn {
+  background: rgba(255, 255, 255, .92);
+  color: var(--text2)
+}
+
+[data-theme="light"] .map-tool-btn:hover {
+  background: var(--card2);
+  color: var(--text)
+}
+
+
+/* ── HEATMAP ── */
+.heat-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 400;
+  opacity: 0;
+  transition: opacity .5s var(--ease);
+}
+
+.heat-canvas.on {
+  opacity: 1
+}
+
+[data-theme="dark"] .heat-canvas,
+.heat-canvas {
+  mix-blend-mode: screen
+}
+
+[data-theme="light"] .heat-canvas {
+  mix-blend-mode: multiply
+}
+
+
+/* ── FAB ── */
+.report-fab {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 16px 36px;
+  background: var(--cyan);
+  border: none;
+  border-radius: 99px;
+  color: var(--cyan-dark);
+  font-family: var(--ff);
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: .3px;
+  box-shadow: 0 0 32px var(--glow-cyan), 0 4px 20px rgba(0, 0, 0, .4);
+  transition: all .25s var(--ease);
+  animation: fabPop .6s var(--spring) .3s backwards;
+}
+
+.report-fab svg {
+  width: 22px !important;
+  height: 22px !important
+}
+
+@keyframes fabPop {
+  from {
+    transform: translateX(-50%) scale(.6);
+    opacity: 0
+  }
+
+  to {
+    transform: translateX(-50%) scale(1);
+    opacity: 1
+  }
+}
+
+.report-fab:hover {
+  transform: translateX(-50%) scale(1.05) translateY(-2px);
+  box-shadow: 0 0 48px var(--glow-cyan), 0 8px 32px rgba(0, 0, 0, .5);
+}
+
+.report-fab:active {
+  transform: translateX(-50%) scale(.97)
+}
+
+.report-fab:disabled {
+  opacity: .6;
+  cursor: not-allowed
+}
+
+
+/* ── MOBILE PIN FAB ── */
+.mobile-pin-fab {
+  display: none;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 600;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border3);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .3);
+  transition: all .2s;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.mobile-pin-fab:hover {
+  background: var(--card2);
+  transform: scale(1.06)
+}
+
+
+/* ── FAB cooldown ring ── */
+.report-fab:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: translateX(-50%) !important;
+}
+
+/* prevent hover transform when on cooldown */
+.report-fab[disabled]:hover {
+  transform: translateX(-50%) !important;
+  box-shadow: 0 0 32px var(--glow-cyan), 0 4px 20px rgba(0, 0, 0, .4) !important;
+}
+

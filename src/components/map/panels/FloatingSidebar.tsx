@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { RainReport } from '../../../types';
+import type { RainReport, LiveEvent } from '../../../types';
 import { useLang } from '../../../context/LangContext';
 import { IconCloudRain, IconActivity, IconBarChart, IconSearch, IconDroplet, IconShare } from '../../Icons';
 import { AdBanner } from '../../ads/AdBanner';
@@ -9,8 +9,8 @@ import { InsightsTab } from '../tabs/InsightsTab';
 
 type SbTab = 'live' | 'activity' | 'insights';
 
-export function FloatingSidebar({ reports, now, selectedPin, onSelect, onViewAll, onDistrictShare, onPinStatus }: {
-  reports: RainReport[]; now: number; selectedPin: string | null;
+export function FloatingSidebar({ reports, now, selectedPin, onSelect, onViewAll, onDistrictShare, onPinStatus, liveEvents }: {
+  reports: RainReport[]; now: number; selectedPin: string | null; liveEvents: LiveEvent[];
   onSelect: (p: string) => void; onViewAll: () => void;
   onDistrictShare: () => void; onPinStatus: () => void;
 }) {
@@ -54,8 +54,8 @@ export function FloatingSidebar({ reports, now, selectedPin, onSelect, onViewAll
         </div>
       </div>
       <div className="fsb-body">
-        {tab === 'live' && <LiveTab reports={reports} now={now} selectedPin={selectedPin} onSelect={onSelect} />}
-        {tab === 'activity' && <ActivityTab reports={reports} now={now} />}
+        {tab === 'live' && <LiveTab liveEvents={liveEvents} selectedPin={selectedPin} onSelect={onSelect} />}
+        {tab === 'activity' && <ActivityTab liveEvents={liveEvents} />}
         {tab === 'insights' && <InsightsTab reports={reports} now={now} />}
       </div>
       <div style={{ padding: '8px 10px', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', background: 'var(--card)' }}>

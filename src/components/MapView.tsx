@@ -4,16 +4,17 @@ import 'leaflet/dist/leaflet.css';
 import { getPincodeData } from '../services/pincodeService';
 import { getIntensityColor } from '../utils/kerala';
 import {
+  supabase,
   loadRainReports, insertRainReport, subscribeToReports,
   isSupabaseReady, currentAvgIntensity, isGhost, isExpired,
   decayFactor,
 } from '../services/supabase';
-import type { RainReport, RawReport } from '../types';
+import type { RainReport, RawReport, LiveEvent } from '../types';
 import { useLang } from '../context/LangContext';
 import { useTheme } from '../context/ThemeContext';
 import { HeatmapLayer } from './HeatmapLayer';
 import {
-  IconCloudRain, IconMapPin, IconFire, IconActivity, IconBarChart, IconAlertTriangle, IconShare, IconSearch,
+  IconCloudRain, IconMapPin, IconFire, IconActivity, IconBarChart, IconAlertTriangle, IconShare, IconSearch, IconInstall,
 } from './Icons';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { NotificationSettingsModal } from './NotificationSettings';
@@ -31,6 +32,7 @@ import { EngagementPanel } from './map/panels/EngagementPanel';
 import { InfoFooter } from './map/panels/InfoFooter';
 import { RainAnimation } from './map/modals/RainAnimation';
 import { ReportModal, INTENSITY_OPTIONS } from '../components/map/modals/ReportModal';
+import { PWAInstallModal } from './map/modals/PWAInstallModal';
 
 /* ─── constants ───────────────────────────────────────────── */
 const TICK_MS = 30_000;
@@ -81,8 +83,9 @@ const sbStyle: React.CSSProperties = { padding: '11px 10px', background: 'var(--
 type SbTab = 'live' | 'activity' | 'insights';
 
 /* ─── MOBILE LIVE SHEET ───────────────────────────────────── */
-function MobileLiveSheet({ reports, now, onClose, onDistrictShare, initialTab }: {
-  reports: RainReport[]; now: number; onClose: () => void; onDistrictShare: () => void; initialTab?: SbTab;
+function MobileLiveSheet({ reports, now, onClose, onDistrictShare, initialTab, liveEvents }: {
+  reports: RainReport[]; now: number; onClose: () => void; onDistrictShare: () => void;
+  initialTab?: SbTab; liveEvents: LiveEvent[];
 }) {
   const { t } = useLang();
   const [tab, setTab] = useState<SbTab>(initialTab || 'live');
@@ -95,13 +98,9 @@ function MobileLiveSheet({ reports, now, onClose, onDistrictShare, initialTab }:
   return (
     <div className="mobile-live-sheet">
       <div className="mobile-live-handle" onClick={onClose} style={{ cursor: 'pointer' }} />
-      <div className="mobile-live-tabs">
-        {TABS.map(tb => <button key={tb.id} className={"mobile-live-tab" + (tab === tb.id ? ' active' : '')} onClick={() => setTab(tb.id)}><tb.Icon size={12} />{tb.label}</button>)}
-        <button className="mobile-live-tab" onClick={onDistrictShare}><IconShare size={12} />Districts</button>
-      </div>
       <div className="mobile-live-body">
-        {tab === 'live' && <LiveTab reports={reports} now={now} selectedPin={null} onSelect={() => { }} />}
-        {tab === 'activity' && <ActivityTab reports={reports} now={now} />}
+        {tab === 'live' && <LiveTab liveEvents={liveEvents} selectedPin={null} onSelect={() => { }} />}
+        {tab === 'activity' && <ActivityTab liveEvents={liveEvents} />}
         {tab === 'insights' && <InsightsTab reports={reports} now={now} />}
       </div>
     </div>
@@ -131,7 +130,8 @@ export default function MapView() {
   const [showDistShare, setShowDist] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showMobileSheet, setMobileSheet] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);   // ← moved inside
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showPWAModal, setShowPWAModal] = useState(false);
   const [selectedPin, setSelectedPin] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState<'radar' | 'activity' | 'insights' | 'districts'>('radar');
   const [lastUpdated, setLastUpdated] = useState(0);
@@ -139,6 +139,7 @@ export default function MapView() {
   const [pwaDismissed, setPwaDismissed] = useState(false);
   const [reportCooldown, setReportCooldown] = useState(0);
   const [stormLevel, setStormLevel] = useState<Level | null>(null);
+  const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
 
   const mapRef = useRef<any>(null);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);  // ← moved inside
@@ -207,9 +208,39 @@ export default function MapView() {
     fetch('/kerala_districts.geojson').then(r => r.json()).then(setKeralaDistrictGeo).catch(() => {
       console.warn('kerala_districts.geojson not found in /public.');
     });
-    if (isSupabaseReady()) {
-      loadRainReports().then(data => { if (Object.keys(data).length) setRainData(data); });
-    }
+
+    const fetchReports = () => {
+      if (isSupabaseReady()) {
+        loadRainReports().then(data => {
+          if (Object.keys(data).length) setRainData(data);
+          setLastUpdated(0);
+        });
+        // Also fetch last 2h individual events for live feed
+        const since2h = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        supabase?.from('rain_reports')
+          .select('id, pin, place, district, intensity, reported_at')
+          .gte('reported_at', since2h)
+          .order('reported_at', { ascending: false })
+          .limit(50)
+          .then(({ data: rows }) => {
+            if (rows) {
+              setLiveEvents(rows.map((r: any) => ({
+                id: r.id,
+                pin: r.pin,
+                place: r.place,
+                district: r.district,
+                intensity: parseFloat(r.intensity) || 0,
+                ts: new Date(r.reported_at).getTime(),
+              })));
+            }
+          });
+      }
+    };
+
+    fetchReports();
+    // Auto-reload data every 10 seconds
+    const interval = setInterval(fetchReports, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   // realtime subscription
@@ -220,17 +251,24 @@ export default function MapView() {
       setRainData(prev => {
         const ex = prev[raw.pin];
         return ex
-          ? { ...prev, [raw.pin]: { ...ex, total: ex.total + raw.intensity, count: ex.count + 1, lastUpdated: ts } }
-          : { ...prev, [raw.pin]: { pin: raw.pin, place: raw.place, district: raw.district, lat: raw.lat, lng: raw.lng, total: raw.intensity, count: 1, lastUpdated: ts, firstReport: ts } };
+          ? { ...prev, [raw.pin]: { ...ex, total: ex.total + raw.intensity, count: ex.count + 1, lastUpdated: ts, lastIntensity: raw.intensity } }
+          : { ...prev, [raw.pin]: { pin: raw.pin, place: raw.place, district: raw.district, lat: raw.lat, lng: raw.lng, total: raw.intensity, count: 1, lastUpdated: ts, firstReport: ts, lastIntensity: raw.intensity } };
       });
+      // Append to individual live events list (keep last 50)
+      setLiveEvents(prev => [{ id: raw.id, pin: raw.pin, place: raw.place, district: raw.district, intensity: raw.intensity, ts }, ...prev].slice(0, 50));
+      setLastUpdated(0);
     });
     return () => { channel?.unsubscribe(); };
   }, []);
 
   // tick
   useEffect(() => {
-    const id = setInterval(() => { setNow(Date.now()); setLastUpdated(p => p + 30); }, TICK_MS);
-    return () => clearInterval(id);
+    const id = setInterval(() => { setNow(Date.now()); }, TICK_MS);
+    const counterId = setInterval(() => { setLastUpdated(p => p + 1); }, 1000);
+    return () => {
+      clearInterval(id);
+      clearInterval(counterId);
+    };
   }, []);
 
   // zoom listener
@@ -264,8 +302,8 @@ export default function MapView() {
       setRainData(prev => {
         const ex = prev[pin];
         return ex
-          ? { ...prev, [pin]: { ...ex, total: ex.total + mm, count: ex.count + 1, lastUpdated: ts } }
-          : { ...prev, [pin]: { pin, lat: data.lat, lng: data.lng, place: data.area, district: data.district, total: mm, count: 1, lastUpdated: ts, firstReport: ts } };
+          ? { ...prev, [pin]: { ...ex, total: ex.total + mm, count: ex.count + 1, lastUpdated: ts, lastIntensity: mm } }
+          : { ...prev, [pin]: { pin, lat: data.lat, lng: data.lng, place: data.area, district: data.district, total: mm, count: 1, lastUpdated: ts, firstReport: ts, lastIntensity: mm } };
       });
       if (isSupabaseReady()) insertRainReport(pin, data.area, data.district, data.lat, data.lng, mm);
       setSelectedPin(pin);
@@ -340,10 +378,10 @@ export default function MapView() {
             const r = markerRadius(zoom, displayMm, sel);
             const fillOpacity = ghost ? 0.28 : Math.max(0.4, 0.85 * decayFactor(item.lastUpdated, now) + 0.15);
             return (
-              <CircleMarker key={item.pin} center={[item.lat, item.lng]} radius={r}
+              <CircleMarker key={`${item.pin}-${theme}`} center={[item.lat, item.lng]} radius={r}
                 pathOptions={{ color: sel ? '#ffffff' : (ghost ? '#4a5568' : color), weight: sel ? 2 : ghost ? 0.8 : 1.2, fillColor: color, fillOpacity, dashArray: ghost ? '3 2' : undefined }}
                 eventHandlers={{ click: () => handleSelect(item.pin) }}>
-                <Tooltip key={`tt-${item.pin}-${theme}`} className="mz-tt" direction="top" offset={[0, -r - 2]} sticky={false}>
+                <Tooltip className="mz-tt" direction="top" offset={[0, -r - 2]} sticky={false}>
                   <MarkerTooltip item={item} now={now} ghost={ghost} />
                 </Tooltip>
               </CircleMarker>
@@ -361,7 +399,7 @@ export default function MapView() {
               <div className="pwa-banner-bar__title">Install Mazha.Live</div>
               <div className="pwa-banner-bar__sub">Track rain from your home screen</div>
             </div>
-            <button className="pwa-banner-bar__btn" onClick={install}>Add to Home</button>
+            <button className="pwa-banner-bar__btn" onClick={() => setShowPWAModal(true)}>Add to Home</button>
             <button className="pwa-banner-bar__close" aria-label="Dismiss install banner" onClick={handlePwaDismiss}>
               <svg width={10} height={10} viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
                 <line x1="1" y1="1" x2="9" y2="9" /><line x1="9" y1="1" x2="1" y2="9" />
@@ -403,6 +441,11 @@ export default function MapView() {
           <button className={`map-tool-btn${showHeat ? ' on' : ''}`} title="Heatmap" onClick={() => setShowHeat(p => !p)}>
             <IconFire size={16} />
           </button>
+          {/* {canInstall && (
+            <button className="map-tool-btn" title="Install App" onClick={() => setShowPWAModal(true)}>
+              <IconInstall size={16} />
+            </button>
+          )} */}
           <button
             className="map-tool-btn map-fullscreen-btn"
             title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
@@ -448,6 +491,7 @@ export default function MapView() {
         <InfoFooter reports={reports} now={now} />
 
         <FloatingSidebar reports={reports} now={now} selectedPin={selectedPin} onSelect={handleSelect}
+          liveEvents={liveEvents}
           onViewAll={() => setShowAll(true)} onDistrictShare={() => setShowDist(true)} onPinStatus={() => setShowPin(true)} />
 
         <EngagementPanel reports={reports} now={now} />
@@ -459,44 +503,39 @@ export default function MapView() {
               <div className="lf-live-dot" />
               Live Reports
             </div>
-            <div className="lf-count">{reports.length} active</div>
+            <div className="lf-count">{liveEvents.length} events</div>
           </div>
           <div className="lf-body">
-            {[...reports]
-              .sort((a, b) => b.lastUpdated - a.lastUpdated)
-              .slice(0, 10)
-              .map((r, idx) => {
-                const ghost = isGhost(r, now);
-                const eff = currentAvgIntensity(r, now);
-                const level = ghost ? 'faded' : getLevel(eff);
-                const cssClass =
-                  ghost ? 'lf-faded' :
-                    level === 'extreme' ? 'lf-extreme' :
-                      level === 'heavy' ? 'lf-heavy' :
-                        level === 'moderate' ? 'lf-moderate' :
-                          'lf-active';
-                const label =
-                  ghost ? 'Faded' :
-                    level === 'extreme' ? 'Extreme' :
-                      level === 'heavy' ? 'Heavy' :
-                        level === 'moderate' ? 'Moderate' :
-                          level === 'light' ? 'Light' :
-                            'Drizzle';
-                return (
-                  <div
-                    key={r.pin}
-                    className={`lf-item ${cssClass}`}
-                    style={{ animationDelay: `${idx * 50}ms` }}
-                    onClick={() => handleSelect(r.pin)}
-                  >
-                    <div className="lf-status-dot" />
-                    <span className="lf-status-label">{label}</span>
-                    <span className="lf-place">{r.place}</span>
-                    <span className="lf-sub">{r.district} · {r.pin}</span>
-                    <span className="lf-time">{fmtTime(r.lastUpdated, t)}</span>
-                  </div>
-                );
-              })}
+            {liveEvents.slice(0, 20).map((ev, idx) => {
+              const level = getLevel(ev.intensity);
+              const cssClass =
+                level === 'extreme' ? 'lf-extreme' :
+                  level === 'heavy' ? 'lf-heavy' :
+                    level === 'moderate' ? 'lf-moderate' :
+                      'lf-active';
+              const label =
+                level === 'extreme' ? 'Extreme' :
+                  level === 'heavy' ? 'Heavy' :
+                    level === 'moderate' ? 'Moderate' :
+                      level === 'light' ? 'Light' : 'Drizzle';
+              return (
+                <div
+                  key={`${ev.id}-${ev.ts}`}
+                  className={`lf-item ${cssClass}`}
+                  style={{ animationDelay: `${idx * 50}ms` }}
+                  onClick={() => handleSelect(ev.pin)}
+                >
+                  <div className="lf-status-dot" />
+                  <span className="lf-status-label">{label}</span>
+                  <span className="lf-place">{ev.place}</span>
+                  <span className="lf-sub">{ev.district} · {ev.pin}</span>
+                  <span className="lf-time">{fmtTime(ev.ts, t)}</span>
+                </div>
+              );
+            })}
+            {liveEvents.length === 0 && (
+              <div style={{ fontSize: 11, color: 'var(--text3)', padding: '12px 8px', textAlign: 'center' }}>No reports yet</div>
+            )}
           </div>
         </div>
 
@@ -542,6 +581,7 @@ export default function MapView() {
       {/* Mobile sheet */}
       {showMobileSheet && (activeNav === 'activity' || activeNav === 'insights') && (
         <MobileLiveSheet reports={reports} now={now} initialTab={activeNav as SbTab}
+          liveEvents={liveEvents}
           onClose={() => { setMobileSheet(false); setActiveNav('radar'); }}
           onDistrictShare={() => setShowDist(true)} />
       )}
@@ -552,6 +592,7 @@ export default function MapView() {
       {showPinStatus && <PinStatusModal reports={reports} now={now} onClose={() => setShowPin(false)} />}
       {showDistShare && <DistrictShareModal reports={reports} now={now} onClose={() => setShowDist(false)} />}
       {showNotif && <NotificationSettingsModal onClose={() => setShowNotif(false)} />}
+      {showPWAModal && <PWAInstallModal onClose={() => setShowPWAModal(false)} onInstall={async () => { const success = await install(); if (success !== false) setShowPWAModal(false); return success; }} />}
 
       {/* First-visit onboarding */}
       {showOnboarding && (

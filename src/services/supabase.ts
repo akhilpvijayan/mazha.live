@@ -41,30 +41,76 @@ export function isGhost(report: RainReport, now = Date.now()): boolean {
 export function currentAvgIntensity(report: RainReport, now = Date.now()): number {
   const age = now - report.lastUpdated;
   if (age >= TWO_HOURS_MS) return 0;
+  // total/count is now always computed from non-faded reports only (last 2h).
   const raw = report.total / report.count;
   return raw * decayFactor(report.lastUpdated, now);
 }
 
-/* ─── Load aggregated reports ─────────────────────────────── */
+/* ─── Load reports: 48h for display, 2h only for intensity calculation ── */
 export async function loadRainReports(): Promise<Record<string, RainReport>> {
   if (!supabase) return {};
-  const { data, error } = await supabase.from('rain_aggregates').select('*');
+
+  const now  = Date.now();
+  const since48h = new Date(now - TWO_DAYS_MS).toISOString();
+
+  const { data, error } = await supabase
+    .from('rain_reports')
+    .select('pin, place, district, lat, lng, intensity, reported_at')
+    .gte('reported_at', since48h)
+    .order('reported_at', { ascending: true });
+
   if (error || !data) { console.error('loadRainReports:', error); return {}; }
 
-  const result: Record<string, RainReport> = {};
+  // Two-pass aggregation per PIN:
+  //  • activeTotal/activeCount → only reports < 2h old (used for intensity)
+  //  • lastUpdated            → most recent report timestamp (any age, for ghost state)
+  //  • firstReport            → earliest report in the 48h window
+  //  • peakIntensity          → highest single-report value in 48h (for ghost tooltip)
+  const agg: Record<string, {
+    pin: string; place: string; district: string; lat: number; lng: number;
+    activeTotal: number; activeCount: number;
+    lastUpdated: number; firstReport: number; peakIntensity: number;
+  }> = {};
+
   data.forEach((row: any) => {
-    const count       = parseInt(row.report_count);
-    const avgIntensity = parseFloat(row.avg_intensity) || 0;
-    result[row.pin] = {
-      pin:         row.pin,
-      place:       row.place,
-      district:    row.district,
-      lat:         row.lat,
-      lng:         row.lng,
-      total:       avgIntensity * count,
-      count,
-      lastUpdated: new Date(row.last_updated).getTime(),
-      firstReport: new Date(row.first_report).getTime(),
+    const ts        = new Date(row.reported_at).getTime();
+    const intensity = parseFloat(row.intensity) || 0;
+    const isActive  = (now - ts) < TWO_HOURS_MS;
+
+    const ex = agg[row.pin];
+    if (ex) {
+      if (isActive) { ex.activeTotal += intensity; ex.activeCount += 1; }
+      ex.lastUpdated   = Math.max(ex.lastUpdated, ts);
+      ex.firstReport   = Math.min(ex.firstReport, ts);
+      ex.peakIntensity = Math.max(ex.peakIntensity, intensity);
+    } else {
+      agg[row.pin] = {
+        pin: row.pin, place: row.place, district: row.district,
+        lat: row.lat, lng: row.lng,
+        activeTotal: isActive ? intensity : 0,
+        activeCount: isActive ? 1 : 0,
+        lastUpdated: ts, firstReport: ts,
+        peakIntensity: intensity,
+      };
+    }
+  });
+
+  // Map to RainReport: total/count = active only; ghost state preserved via lastUpdated
+  const result: Record<string, RainReport> = {};
+  Object.values(agg).forEach(r => {
+    const hasActive = r.activeCount > 0;
+    result[r.pin] = {
+      pin:           r.pin,
+      place:         r.place,
+      district:      r.district,
+      lat:           r.lat,
+      lng:           r.lng,
+      // Use active-only totals for calculations; fall back to peak for ghost display
+      total:         hasActive ? r.activeTotal : r.peakIntensity,
+      count:         hasActive ? r.activeCount : 1,
+      lastUpdated:   r.lastUpdated,
+      firstReport:   r.firstReport,
+      lastIntensity: hasActive ? (r.activeTotal / r.activeCount) : r.peakIntensity,
     };
   });
   return result;

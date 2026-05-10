@@ -1,0 +1,36 @@
+  /* ── LIVE FEED — mobile ── */
+  .live-feed-panel {
+    bottom: calc(var(--bottom-nav-h) + 140px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: 240px;
+  }
+
+  .lf-body {
+    max-height: 200px
+  }
+
+  .lf-status-label {
+    font-size: 11px;
+    min-width: 56px
+  }
+
+  .lf-place {
+    font-size: 11px
+  }
+
+  .lf-time {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.38)
+  }
+
+  .lf-status-dot {
+    width: 7px;
+    height: 7px
+  }
+
+  .lf-item {
+    gap: 8px;
+    padding: 5px 2px 6px
+  }

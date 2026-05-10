@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RainReport } from "../../../types";
 import { IconAlertTriangle, IconShield, IconX } from "../../Icons";
+import { IconHeart } from '@tabler/icons-react';
 import SupportModal from "../../SupportModal";
 
 export function InfoFooter({ reports, now }: { reports: RainReport[]; now: number }) {
@@ -20,11 +21,16 @@ export function InfoFooter({ reports, now }: { reports: RainReport[]; now: numbe
             <IconAlertTriangle size={9} color="currentColor" /> Disclaimer
           </button>
           <span className="info-sep">·</span>
-          <a className="info-link" href="https://mazha.live/terms" target="_blank" rel="noopener noreferrer">
+          {/* <a className="info-link" href="https://mazha.live/terms" target="_blank" rel="noopener noreferrer">
             <IconShield size={9} color="currentColor" /> Terms
-          </a>
+          </a> */}
         </div>
-        <button className="info-support-btn" onClick={() => setShowSupport(true)}><span>☕</span> Support</button>
+        <button className="info-support-btn" onClick={() => setShowSupport(true)}>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IconHeart size={18} color="#ef4444" fill="#ef4444" style={{ filter: 'drop-shadow(0 0 6px rgba(239, 68, 68, 0.5))', animation: 'pulse 2s infinite' }} />
+          </span>
+          <span>Support</span>
+        </button>
       </div>
       <div className="info-disclaimer-chip">
         <IconShield size={9} color="var(--text3)" />
