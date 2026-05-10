@@ -76,9 +76,9 @@ export function ReportModal({ onClose, onSubmit }: {
                 <input className={`pin-input${pinErr ? ' err' : pin.length === 6 && pinPreview ? ' ok' : ''}`}
                   placeholder="_ _ _ _ _ _" value={pin} onChange={e => handlePin(e.target.value)}
                   inputMode="numeric" maxLength={6} autoFocus />
-                <button className="pin-locate-btn" disabled={pinLooking}>
+                {/* <button className="pin-locate-btn" disabled={pinLooking}>
                   {pinLooking ? <span className="submit-spinner" style={{ width: 16, height: 16, borderTopColor: 'var(--cyan)' }} /> : <IconCrosshair size={20} />}
-                </button>
+                </button> */}
               </div>
               <div className="pin-dots">
                 {Array.from({ length: 6 }).map((_, i) => <div key={i} className={`pin-dot${i < pin.length ? ' on' : ''}`} />)}
