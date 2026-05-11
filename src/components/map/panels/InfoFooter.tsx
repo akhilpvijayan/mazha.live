@@ -14,7 +14,7 @@ export function InfoFooter({ reports, now }: { reports: RainReport[]; now: numbe
         <div className="info-footer-left">
           <span className="info-tag">
             <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-            Made by Akhil · Kerala
+            Made by Akhil
           </span>
           <span className="info-sep">·</span>
           <button className="info-link" onClick={() => setShowDisclaimer(true)}>

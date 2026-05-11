@@ -72,8 +72,8 @@ function fmtTime(ts: number, t: any): string {
 }
 
 function markerRadius(zoom: number, intensity: number, selected: boolean): number {
-  const base = zoom <= 6 ? 2 : zoom === 7 ? 3 : zoom === 8 ? 4 : zoom === 9 ? 4
-    : zoom === 10 ? 4 : zoom === 11 ? 7 : 8;
+  const base = zoom <= 6 ? 2 : zoom === 7 ? 1 : zoom === 8 ? 3 : zoom === 9 ? 3
+    : zoom === 10 ? 3 : zoom === 11 ? 7 : 8;
   const bonus = Math.min(2, intensity / 60);
   const r = base + bonus;
   return selected ? r + 2 : r;
