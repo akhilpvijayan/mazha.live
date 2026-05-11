@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, useMap } from 'react-leaflet';
+﻿import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { getPincodeData } from '../services/pincodeService';
@@ -72,9 +72,9 @@ function fmtTime(ts: number, t: any): string {
 }
 
 function markerRadius(zoom: number, intensity: number, selected: boolean): number {
-  const base = zoom <= 6 ? 4 : zoom === 7 ? 5 : zoom === 8 ? 6 : zoom === 9 ? 7
-    : zoom === 10 ? 8 : zoom === 11 ? 9 : 10;
-  const bonus = Math.min(3, intensity / 40);
+  const base = zoom <= 6 ? 2 : zoom === 7 ? 3 : zoom === 8 ? 4 : zoom === 9 ? 4
+    : zoom === 10 ? 4 : zoom === 11 ? 7 : 8;
+  const bonus = Math.min(2, intensity / 60);
   const r = base + bonus;
   return selected ? r + 2 : r;
 }
@@ -157,7 +157,7 @@ export default function MapView() {
 
   /* ── cooldown helper ── */
   const startCooldown = useCallback(() => {
-    setReportCooldown(10);
+    setReportCooldown(20);
     cooldownRef.current = setInterval(() => {
       setReportCooldown(p => {
         if (p <= 1) { clearInterval(cooldownRef.current!); return 0; }
@@ -422,7 +422,7 @@ export default function MapView() {
             <span className="intense-pulse-dot" />
             <IconAlertTriangle size={13} color="#fff" />
             {t.intenseBanner} <span className="banner-highlight-red">{heavyReport.district}</span>
-            &nbsp;·&nbsp;<span className="banner-count-red">{reports.length * 12} {t.reportsIn}</span>
+            &nbsp;·&nbsp;<span className="banner-count-red">{reports.length} {t.reportsIn}</span>
             <span className="intense-bar-track"><span className="intense-bar-fill" /></span>
           </div>
         )}
