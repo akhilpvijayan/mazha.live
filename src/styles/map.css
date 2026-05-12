@@ -280,4 +280,23 @@ body.map--fullscreen .leaflet-container {
   transform: translateX(-50%) !important;
   box-shadow: 0 0 32px var(--glow-cyan), 0 4px 20px rgba(0, 0, 0, .4) !important;
 }
-
+
+.rain-blink {
+  animation: rainPulse 2.6s infinite ease-in-out;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes rainPulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.35);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

@@ -1,4 +1,4 @@
-﻿import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, useMap } from 'react-leaflet';
+﻿import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, useMap, Marker } from 'react-leaflet';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { getPincodeData } from '../services/pincodeService';
@@ -35,6 +35,7 @@ import { InfoFooter } from './map/panels/InfoFooter';
 import { RainAnimation } from './map/modals/RainAnimation';
 import { ReportModal, INTENSITY_OPTIONS } from '../components/map/modals/ReportModal';
 import { PWAInstallModal } from './map/modals/PWAInstallModal';
+import { createDamIcon, DAM_DATA_URL, DAM_IMAGES, getDamColor } from './map/DamIcon ';
 
 /* ─── constants ───────────────────────────────────────────── */
 const TICK_MS = 30_000;
@@ -72,7 +73,7 @@ function fmtTime(ts: number, t: any): string {
 }
 
 function markerRadius(zoom: number, intensity: number, selected: boolean): number {
-  const base = zoom <= 6 ? 2 : zoom === 7 ? 3 : zoom === 8 ? 3 : zoom === 9 ? 3
+  const base = zoom <= 6 ? 2 : zoom === 7 ? 2 : zoom === 8 ? 3 : zoom === 9 ? 3
     : zoom === 10 ? 3 : zoom === 11 ? 7 : 8;
   const bonus = Math.min(2, intensity / 60);
   const r = base + bonus;
@@ -130,7 +131,7 @@ export default function MapView() {
   const [showHeat, setShowHeat] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showAllModal, setShowAll] = useState(false);
-  const [showPinStatus, setShowPin] = useState(false);   // ← was missing
+  const [showPinStatus, setShowPin] = useState(false);
   const [showDistShare, setShowDist] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showMobileSheet, setMobileSheet] = useState(false);
@@ -145,8 +146,13 @@ export default function MapView() {
   const [stormLevel, setStormLevel] = useState<Level | null>(null);
   const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
 
+  /* ── dam state ── */
+  const [damData, setDamData] = useState<any[]>([]);
+  const [showDams, setShowDams] = useState(true);
+  const [selectedDam, setSelectedDam] = useState<any | null>(null);
+
   const mapRef = useRef<any>(null);
-  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);  // ← moved inside
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ── derived ── */
   const reports = useMemo(() =>
@@ -154,6 +160,12 @@ export default function MapView() {
     [rainData, now]
   );
   const heavyReport = reports.find(r => currentAvgIntensity(r, now) > 50);
+
+  /* ── spillway alert derived ── */
+  const spillwayDams = useMemo(() =>
+    damData.filter(d => parseFloat(d.data[0]?.spillwayRelease) > 0),
+    [damData]
+  );
 
   /* ── cooldown helper ── */
   const startCooldown = useCallback(() => {
@@ -181,23 +193,16 @@ export default function MapView() {
       .then(r => r.json())
       .then(({ ip }) => {
         const key = `mz_tour_ip_${btoa(ip).slice(0, 12)}`;
-        if (localStorage.getItem(key)) {
-          // same IP, tour already done — check if onboarding needed
-          // if (!localStorage.getItem('mz_onboarding_seen')) {
-          //   setTimeout(() => setShowOnboarding(true), 1200);
-          // }
-          return;
-        }
-        // new visitor — mark IP and show tour only
+        if (localStorage.getItem(key)) return;
         localStorage.setItem(key, '1');
         setShowOnboarding(false);
         setTimeout(() => setShowTour(true), 2200);
       })
       .catch(() => {
-        // IP fetch failed — show tour as fallback, not both
         setTimeout(() => setShowTour(true), 2200);
       });
   }, []);
+
   // PWA dismiss persistence
   useEffect(() => {
     if (localStorage.getItem('mz_pwa_dismissed')) setPwaDismissed(true);
@@ -206,12 +211,20 @@ export default function MapView() {
   // cleanup cooldown on unmount
   useEffect(() => () => { if (cooldownRef.current) clearInterval(cooldownRef.current); }, []);
 
-  // load GeoJSON + reports
+  // load GeoJSON + reports + dam data
   useEffect(() => {
+    // GeoJSON layers
     fetch('/india_state.geojson').then(r => r.json()).then(setGeo);
-    fetch('/kerala_districts.geojson').then(r => r.json()).then(setKeralaDistrictGeo).catch(() => {
-      console.warn('kerala_districts.geojson not found in /public.');
-    });
+    fetch('/kerala_districts.geojson')
+      .then(r => r.json())
+      .then(setKeralaDistrictGeo)
+      .catch(() => console.warn('kerala_districts.geojson not found in /public.'));
+
+    // ── Dam data — fetched independently, always ──
+    fetch(DAM_DATA_URL)
+      .then(r => r.json())
+      .then(json => setDamData(json.dams))
+      .catch(() => console.warn('Dam data fetch failed'));
 
     const fetchReports = () => {
       if (isSupabaseReady()) {
@@ -245,7 +258,6 @@ export default function MapView() {
     };
 
     fetchReports();
-    // Auto-reload data every 20 seconds (aligned with SW cache refresh)
     const interval = setInterval(fetchReports, 20_000);
     return () => clearInterval(interval);
   }, []);
@@ -261,7 +273,6 @@ export default function MapView() {
           ? { ...prev, [raw.pin]: { ...ex, total: ex.total + raw.intensity, count: ex.count + 1, lastUpdated: ts, lastIntensity: raw.intensity } }
           : { ...prev, [raw.pin]: { pin: raw.pin, place: raw.place, district: raw.district, lat: raw.lat, lng: raw.lng, total: raw.intensity, count: 1, lastUpdated: ts, firstReport: ts, lastIntensity: raw.intensity } };
       });
-      // Append to individual live events list (keep last 200, new events are never faded)
       setLiveEvents(prev => [{ id: raw.id, pin: raw.pin, place: raw.place, district: raw.district, intensity: raw.intensity, ts, faded: false }, ...prev].slice(0, 200));
       setLastUpdated(0);
     });
@@ -376,6 +387,7 @@ export default function MapView() {
           {keralaDistrictGeo && <GeoJSON key={`kerala-districts-${theme}`} data={keralaDistrictGeo} style={keralaDistrictStyle} onEachFeature={onEachKeralaDistrict} />}
           {geo && <GeoJSON key={`state-${theme}`} data={geo} style={geoStyle} />}
 
+          {/* ── Rain markers ── */}
           {!showHeat && reports.map(item => {
             const ghost = isGhost(item, now);
             const effAvg = currentAvgIntensity(item, now);
@@ -385,13 +397,147 @@ export default function MapView() {
             const r = markerRadius(zoom, displayMm, sel);
             const fillOpacity = ghost ? 0.28 : Math.max(0.4, 0.85 * decayFactor(item.lastUpdated, now) + 0.15);
             return (
-              <CircleMarker key={`${item.pin}-${theme}`} center={[item.lat, item.lng]} radius={r}
-                pathOptions={{ color: sel ? '#ffffff' : (ghost ? '#4a5568' : color), weight: sel ? 2 : ghost ? 0.8 : 1.2, fillColor: color, fillOpacity, dashArray: ghost ? '3 2' : undefined }}
-                eventHandlers={{ click: () => handleSelect(item.pin) }}>
+              <CircleMarker
+                key={`${item.pin}-${theme}`}
+                center={[item.lat, item.lng]}
+                radius={r}
+                pathOptions={{
+                  className: !ghost ? 'rain-blink' : '',
+                  color: sel ? '#ffffff' : (ghost ? '#4a5568' : color),
+                  weight: sel ? 2 : ghost ? 0.8 : 1.2,
+                  fillColor: color,
+                  fillOpacity,
+                  dashArray: ghost ? '3 2' : undefined,
+                }}
+                eventHandlers={{ click: () => handleSelect(item.pin) }}
+              >
                 <Tooltip className="mz-tt" direction="top" offset={[0, -r - 2]} sticky={false}>
                   <MarkerTooltip item={item} now={now} ghost={ghost} />
                 </Tooltip>
               </CircleMarker>
+            );
+          })}
+
+          {/* ── Dam markers ── */}
+          {showDams && damData.map(dam => {
+            const pct = parseFloat(dam.data[0]?.storagePercentage || '0');
+            const isSelected = selectedDam?.id === dam.id;
+            const spillway = parseFloat(dam.data[0]?.spillwayRelease || '0') > 0;
+            const damColor = getDamColor(pct);
+            const icon = createDamIcon(pct, spillway, isSelected);
+            return (
+              <Marker
+                key={`dam-${dam.id}`}
+                position={[dam.latitude, dam.longitude]}
+                icon={icon}
+                zIndexOffset={isSelected ? 1000 : 0}
+                eventHandlers={{ click: () => setSelectedDam((d: any) => d?.id === dam.id ? null : dam) }}
+              >
+                <Tooltip className="mz-tt" direction="top" offset={[0, -14]} sticky={false}>
+                  <div style={{ width: 220, fontFamily: 'var(--ff)', overflow: 'hidden', borderRadius: 12 }}>
+
+                    {/* ── Image with name overlay ── */}
+                    <div style={{ position: 'relative', height: 90, background: 'var(--card)', margin: '-8px -8px 0 -8px' }}>
+                      {DAM_IMAGES[dam.name] && (
+                        <img
+                          src={DAM_IMAGES[dam.name]}
+                          alt={dam.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      )}
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.65) 100%)' }} />
+                      <div style={{ position: 'absolute', bottom: 8, left: 10, right: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#fff', fontSize: 13, fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                          🏞 {dam.name}
+                        </span>
+                        {spillway && (
+                          <span style={{ fontSize: 9, fontWeight: 700, background: '#ff4444', color: '#fff', borderRadius: 4, padding: '2px 6px', letterSpacing: '0.3px', flexShrink: 0 }}>
+                            SPILLWAY
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* ── Body ── */}
+                    <div style={{ padding: '10px 11px 11px', marginTop: 0 }}>
+
+                      {/* Storage bar */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6 8 4 12 4 16a8 8 0 0 0 16 0c0-4-2-8-8-14z" /></svg>
+                          Storage
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: damColor }}>{pct.toFixed(1)}%</span>
+                      </div>
+                      <div style={{ height: 5, background: 'var(--border)', borderRadius: 99, overflow: 'hidden', marginBottom: 10 }}>
+                        <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: damColor, borderRadius: 99, transition: 'width .3s' }} />
+                      </div>
+
+                      {/* Water level pill */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <div style={{ fontSize: 11, background: 'var(--card2)', borderRadius: 6, padding: '4px 8px', color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h20M2 6h20M2 18h20" /></svg>
+                          <strong style={{ color: 'var(--text)', fontWeight: 600 }}>{dam.data[0]?.waterLevel} m</strong>
+                          <span style={{ color: 'var(--border2)' }}>/</span>
+                          <span>FRL {dam.FRL} m</span>
+                        </div>
+                      </div>
+
+                      {/* Spillway alert */}
+                      {spillway && (
+                        <div style={{ marginBottom: 10, borderRadius: 6, padding: '6px 8px', background: 'rgba(255,68,68,0.08)', border: '0.5px solid rgba(255,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: 11, color: '#ff4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                            Spillway release
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: '#ff4444' }}>{dam.data[0].spillwayRelease} m³/s</span>
+                        </div>
+                      )}
+
+                      {/* Inflow / Outflow grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginBottom: 10 }}>
+                        <div style={{ background: 'var(--card2)', borderRadius: 7, padding: '6px 8px' }}>
+                          <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><polyline points="19 12 12 19 5 12" /></svg>
+                            Inflow
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>
+                            {dam.data[0]?.inflow || '—'}
+                            {dam.data[0]?.inflow && <span style={{ fontSize: 10, fontWeight: 400, color: 'var(--text3)' }}> m³/s</span>}
+                          </div>
+                        </div>
+                        <div style={{ background: 'var(--card2)', borderRadius: 7, padding: '6px 8px' }}>
+                          <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></svg>
+                            Outflow
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>
+                            {dam.data[0]?.totalOutflow || '—'}
+                            {dam.data[0]?.totalOutflow && <span style={{ fontSize: 10, fontWeight: 400, color: 'var(--text3)' }}> m³/s</span>}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: '0.5px solid var(--border)' }}>
+                        <span style={{ fontSize: 10, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                          {dam.data[0]?.date}
+                        </span>
+                        <span style={{
+                          fontSize: 10, borderRadius: 4, padding: '2px 7px', fontWeight: 600,
+                          background: pct >= 90 ? 'rgba(255,68,68,0.1)' : pct >= 70 ? 'rgba(255,149,0,0.1)' : 'rgba(0,170,255,0.1)',
+                          color: pct >= 90 ? '#ff4444' : pct >= 70 ? '#ff9500' : '#0088cc',
+                        }}>
+                          {pct.toFixed(0)}%
+                        </span>
+                      </div>
+
+                    </div>
+                  </div>
+                </Tooltip>
+              </Marker>
             );
           })}
         </MapContainer>
@@ -417,6 +563,7 @@ export default function MapView() {
 
         <HeatmapLayer reports={reports.filter(r => !isGhost(r, now))} mapRef={mapRef} visible={showHeat} />
 
+        {/* Heavy rain banner */}
         {heavyReport && (
           <div className="map-banner map-banner--intense">
             <span className="intense-pulse-dot" />
@@ -424,6 +571,15 @@ export default function MapView() {
             {t.intenseBanner} <span className="banner-highlight-red">{heavyReport.district}</span>
             &nbsp;·&nbsp;<span className="banner-count-red">{reports.length} {t.reportsIn}</span>
             <span className="intense-bar-track"><span className="intense-bar-fill" /></span>
+          </div>
+        )}
+
+        {/* Spillway alert banner */}
+        {spillwayDams.length > 0 && (
+          <div className="map-banner map-banner--intense" style={{ top: heavyReport ? 52 : 8, background: 'rgba(255,68,68,0.18)', borderColor: 'rgba(255,68,68,0.4)' }}>
+            <span className="intense-pulse-dot" style={{ background: '#ff4444' }} />
+            ⚠️ Spillway release active —&nbsp;
+            <span className="banner-highlight-red">{spillwayDams.map(d => d.name).join(', ')}</span>
           </div>
         )}
 
@@ -444,15 +600,65 @@ export default function MapView() {
               <line x1="2" y1="12" x2="6" y2="12" /><line x1="18" y1="12" x2="22" y2="12" />
             </svg>
           </button>
-
           <button className={`map-tool-btn${showHeat ? ' on' : ''}`} title="Heatmap" onClick={() => setShowHeat(p => !p)}>
             <IconFire size={16} />
           </button>
-          {/* {canInstall && (
-            <button className="map-tool-btn" title="Install App" onClick={() => setShowPWAModal(true)}>
-              <IconInstall size={16} />
-            </button>
-          )} */}
+          <button
+            className={`map-tool-btn${showDams ? ' on' : ''}`}
+            title={showDams ? 'Hide dam levels' : '🏞️ Check live dam levels - storage, inflow & spillway alerts'}
+            onClick={() => setShowDams(p => !p)}
+            style={{ fontSize: 14, position: 'relative', overflow: 'visible' }}
+          >
+            <svg
+              width="17" height="17" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"
+            >
+              <path d="M2 9 Q6 7 12 9 Q18 11 22 9" />
+              <path d="M8 9 L6 20 L18 20 L16 9" />
+              <line x1="7" y1="9" x2="17" y2="9" />
+              <rect x="10" y="15" width="4" height="5" rx="0.5" />
+              <line x1="10" y1="9" x2="8.5" y2="20" />
+              <line x1="14" y1="9" x2="15.5" y2="20" />
+              <path d="M4 22 Q7 21 10 22 Q13 23 16 22 Q19 21 22 22" />
+            </svg>
+
+            {spillwayDams.length > 0 && showDams && (
+              <>
+                <span style={{
+                  position: 'absolute', top: 1, right: 1,
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: '#ff4444',
+                  border: '1.5px solid var(--bg)',
+                  animation: 'damPulse 1.4s ease-in-out infinite',
+                }} />
+                <style>{`
+        @keyframes damPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255,68,68,0.7); }
+          50% { box-shadow: 0 0 0 4px rgba(255,68,68,0); }
+        }
+      `}</style>
+              </>
+            )}
+
+            {!showDams && !localStorage.getItem('mz_dams_seen') && (
+              <span style={{
+                position: 'absolute', top: -6, right: -8,
+                fontSize: 8, fontWeight: 800, letterSpacing: '0.3px',
+                background: 'var(--cyan)', color: 'var(--cyan-dark)',
+                borderRadius: 4, padding: '1px 4px',
+                pointerEvents: 'none',
+                animation: 'damBounce 2s ease-in-out infinite',
+              }}>
+                NEW
+              </span>
+            )}
+            <style>{`
+    @keyframes damBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+  `}</style>
+          </button>
           <button
             className="map-tool-btn map-fullscreen-btn"
             title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
@@ -675,4 +881,3 @@ export default function MapView() {
     </>
   );
 }
-
