@@ -26,21 +26,23 @@ export const getIntensityLabel = (mm: number): string => {
 export const getIntensityColor = (mm: number): string => {
   if (mm > 80) return '#ff3b3b';
   if (mm > 50) return '#ff7a00';
-  if (mm > 20) return '#a855f7';
-  if (mm > 8)  return '#4db8ff';
-  return '#00d4ff';
+  if (mm > 20) return 'rgb(255, 0, 234)';
+  if (mm > 8)  return 'rgb(251, 255, 0)';
+  return 'rgb(18, 216, 28)';
 };
 
 export const getIntensityGlow = (mm: number): string => {
   if (mm > 80) return 'rgba(255,59,59,0.5)';
   if (mm > 50) return 'rgba(255,122,0,0.5)';
-  if (mm > 20) return 'rgba(168,85,247,0.5)';
-  return 'rgba(0,212,255,0.4)';
+  if (mm > 20) return 'rgb(255, 0, 234)';
+  if (mm > 8)  return 'rgba(251,255,0,0.5)';
+  return 'rgba(18,216,28,0.5)';
 };
 
 export const getHeatColor = (mm: number): [number, number, number, number] => {
-  if (mm > 80) return [255, 59,  59,  210];
-  if (mm > 50) return [255, 120, 0,   190];
-  if (mm > 20) return [168, 85,  247, 170];
-  return               [0,  212, 255, 130];
+  if (mm > 80) return [255, 59,  59, 255]; 
+  if (mm > 50) return [255, 122, 0,  255];  
+  if (mm > 20) return [255, 0,   234, 128];
+  if (mm > 8)  return [251, 255, 0,  255];
+  return               [18,  216, 28, 255]; 
 };

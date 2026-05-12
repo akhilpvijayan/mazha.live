@@ -1,18 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 import type { RainReport } from '../types';
+import { getHeatColor } from '../utils/kerala';
 
 interface Props {
   reports: RainReport[];
   mapRef: React.MutableRefObject<any>;
   visible: boolean;
-}
-
-function getHeatColor(mm: number): [number, number, number, number] {
-  if (mm > 80) return [255, 59,  59,  200];
-  if (mm > 50) return [255, 100, 0,   180];
-  if (mm > 20) return [168, 85,  247, 160];
-  if (mm > 8)  return [77,  184, 255, 135];
-  return               [0,   212, 255, 110];
 }
 
 export function HeatmapLayer({ reports, mapRef, visible }: Props) {

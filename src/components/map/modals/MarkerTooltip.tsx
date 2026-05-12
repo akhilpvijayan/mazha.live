@@ -7,8 +7,8 @@ import { DecayBar, fmtDuration } from '../modals/DecayBar';
 type Level = 'drizzle' | 'light' | 'moderate' | 'heavy' | 'extreme';
 
 const BADGE_COLORS: Record<Level, string> = {
-  drizzle: '#4d9fff', light: '#60b4ff', moderate: '#a855f7',
-  heavy: '#f59e0b', extreme: '#ef4444',
+  drizzle: 'rgb(18, 216, 28)', light: 'rgb(251, 255, 0)', moderate: 'rgb(255, 0, 234)',
+  heavy: '#ff7a00', extreme: '#ff3b3b',
 };
 
 function getLevel(mm: number): Level {
