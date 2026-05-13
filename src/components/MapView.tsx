@@ -575,7 +575,7 @@ export default function MapView() {
         )}
 
         {/* Spillway alert banner */}
-        {spillwayDams.length > 0 && (
+        {spillwayDams.length > 0 && showDams && (
           <div className="map-banner map-banner--intense" style={{ top: heavyReport ? 52 : 8, background: 'rgba(255,68,68,0.18)', borderColor: 'rgba(255,68,68,0.4)' }}>
             <span className="intense-pulse-dot" style={{ background: '#ff4444' }} />
             ⚠️ Spillway release active —&nbsp;
