@@ -284,7 +284,7 @@ body.map--fullscreen .leaflet-container {
 .rain-blink {
   animation: rainPulse 2.6s infinite ease-in-out;
   transform-box: fill-box;
-  transform-origin: center;
+  transform-origin: 50% 50%;
 }
 
 @keyframes rainPulse {
