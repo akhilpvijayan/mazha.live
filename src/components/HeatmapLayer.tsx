@@ -16,7 +16,6 @@ export function HeatmapLayer({ reports, mapRef, visible }: Props) {
     const canvas = canvasRef.current;
     if (!canvas || !map) return;
 
-    // Guard: map must be ready
     try { map.getCenter(); } catch { return; }
 
     const container = map.getContainer() as HTMLElement;
@@ -32,7 +31,6 @@ export function HeatmapLayer({ reports, mapRef, visible }: Props) {
 
     if (!visible || reports.length === 0) return;
 
-    // Scale radius by zoom level so heatmap stays map-proportional
     const zoom = map.getZoom?.() ?? 7;
     const zoomScale = Math.max(0.25, Math.min(1.6, (zoom - 5) / 7));
 
@@ -42,7 +40,6 @@ export function HeatmapLayer({ reports, mapRef, visible }: Props) {
       try { pt = map.latLngToContainerPoint([r.lat, r.lng]); } catch { return; }
 
       const [red, g, b, a] = getHeatColor(avg);
-      // Significantly smaller radius: 20-60px scaled by zoom, not 55-140px
       const baseRadius = Math.max(20, Math.min(60, 20 + avg * 0.45));
       const radius = baseRadius * zoomScale;
 
@@ -58,13 +55,11 @@ export function HeatmapLayer({ reports, mapRef, visible }: Props) {
     });
   }, [reports, visible, mapRef]);
 
-  // Redraw whenever reports / visibility changes
   useEffect(() => {
     const t = setTimeout(redraw, 120);
     return () => clearTimeout(t);
   }, [redraw]);
 
-  // Bind map pan/zoom events
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;

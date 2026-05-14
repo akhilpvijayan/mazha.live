@@ -282,21 +282,19 @@ body.map--fullscreen .leaflet-container {
 }
 
 .rain-blink {
-  animation: rainPulse 2.6s infinite ease-in-out;
+  paint-order: stroke fill;
+  animation: markerRipple 2.2s ease-out infinite;
   transform-box: fill-box;
   transform-origin: 50% 50%;
 }
 
-@keyframes rainPulse {
+@keyframes markerRipple {
   0% {
-    transform: scale(1);
+    stroke-width: 0;
+    stroke-opacity: 0.7;
   }
-
-  50% {
-    transform: scale(1.35);
-  }
-
   100% {
-    transform: scale(1);
+    stroke-width: 8;
+    stroke-opacity: 0;
   }
 }

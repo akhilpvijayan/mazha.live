@@ -13,6 +13,7 @@ import type { RainReport, RawReport, LiveEvent } from '../types';
 import { useLang } from '../context/LangContext';
 import { useTheme } from '../context/ThemeContext';
 import { HeatmapLayer } from './HeatmapLayer';
+import { AlertTicker } from './map/modals/AlertTicker';
 import {
   IconCloudRain, IconMapPin, IconFire, IconActivity, IconBarChart, IconShare, IconSearch, IconInstall,
 } from './Icons';
@@ -33,7 +34,6 @@ import { FloatingSidebar } from './map/panels/FloatingSidebar';
 import { EngagementPanel } from './map/panels/EngagementPanel';
 import { InfoFooter } from './map/panels/InfoFooter';
 import { RainAnimation } from './map/modals/RainAnimation';
-import { AlertTicker } from './map/modals/AlertTicker';
 import { ReportModal, INTENSITY_OPTIONS } from '../components/map/modals/ReportModal';
 import { PWAInstallModal } from './map/modals/PWAInstallModal';
 import { createDamIcon, DAM_DATA_URL, DAM_IMAGES, getDamColor } from './map/DamIcon ';
@@ -74,11 +74,12 @@ function fmtTime(ts: number, t: any): string {
 }
 
 function markerRadius(zoom: number, intensity: number, selected: boolean): number {
-  const base = zoom <= 6 ? 2 : zoom === 7 ? 2 : zoom === 8 ? 3 : zoom === 9 ? 3
-    : zoom === 10 ? 3 : zoom === 11 ? 7 : 8;
-  const bonus = Math.min(2, intensity / 60);
-  const r = base + bonus;
-  return selected ? r + 2 : r;
+  const screenScale = Math.min(1, Math.max(0.55, window.innerWidth / 768));
+  const base = zoom <= 6 ? 1 : zoom === 7 ? 1.5 : zoom === 8 ? 2 : zoom === 9 ? 2.5
+    : zoom === 10 ? 3 : zoom === 11 ? 5 : 6;
+  const bonus = Math.min(1.5, intensity / 80);
+  const r = (base + bonus) * screenScale;
+  return selected ? r + 1.5 : r;
 }
 
 const sbStyle: React.CSSProperties = { padding: '11px 10px', background: 'var(--card)', border: '1px solid var(--border2)', borderRadius: 11, color: 'var(--text2)', fontFamily: 'var(--ff)', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all .2s' };
