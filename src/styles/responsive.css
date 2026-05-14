@@ -14,7 +14,7 @@
 
   .map-tools {
     right: 16px;
-    top: 16px
+    top: 50px
   }
 
   .map-shell {
@@ -31,12 +31,6 @@
 
   .last-updated {
     bottom: calc(var(--bottom-nav-h) + 8px)
-  }
-
-  .map-banner {
-    max-width: calc(100vw - 90px);
-    font-size: 11px;
-    top: 10px
   }
 
   .intensity-grid {
@@ -332,7 +326,7 @@
   .pwa-banner-bar {
     position: absolute !important;
     bottom: auto !important;
-    top: 12px !important;
+    top: 46px !important;
     left: 60px !important;
     right: 60px !important;
     transform: none !important;
@@ -481,12 +475,8 @@
     height: 4px;
   }
 
-  .map-shell:not(:has(.map-banner)) .last-updated {
-    top: 60px !important;
-  }
-
-  .map-shell:not(:has(.map-banner)):not(:has(.pwa-banner-bar)) .last-updated {
-    top: 12px !important;
+  .map-shell:not(:has(.pwa-banner-bar)) .last-updated {
+    top: 46px !important;
   }
 }
 
@@ -525,7 +515,7 @@
   .info-footer {
     display: flex !important;
     position: absolute !important;
-    top: 12px !important;
+    top: 46px !important;
     left: 12px !important;
     bottom: auto !important;
     transform: none !important;
@@ -582,34 +572,21 @@
   }
 }
 
-/* 5. MAP BANNER (alert) — row 2, centre */
+/* 5. ALERT TICKER BAR */
 @media (max-width: 768px) {
-  .map-banner {
-    position: absolute !important;
-    top: 60px !important;
-    left: 60px !important;
-    right: 60px !important;
-    transform: none !important;
-    height: 40px !important;
-    max-width: none !important;
-    border-radius: 10px;
-    padding: 0 10px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 5px;
-    font-size: 9.5px;
-    white-space: nowrap;
-    overflow: hidden;
-    z-index: 590;
+  .alert-ticker-bar {
+    font-size: 10px;
+    height: 30px;
+    padding: 0 10px;
+    gap: 6px;
   }
 
-  .intense-bar-track {
-    display: none !important;
+  .alert-ticker-track {
+    animation-duration: 4s;
   }
 
-  .banner-count-red,
-  .banner-count {
-    display: none !important;
+  .alert-ticker-sep {
+    margin: 0 6px;
   }
 }
 
@@ -617,7 +594,7 @@
 @media (max-width: 768px) {
   .map-tools {
     position: absolute !important;
-    top: 12px !important;
+    top: 46px !important;
     right: 12px !important;
     flex-direction: column !important;
     gap: 8px !important;

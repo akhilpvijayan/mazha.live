@@ -1,7 +1,7 @@
 /* ── FLOATING SIDEBAR ── */
 .float-sidebar {
   position: absolute;
-  top: 16px;
+  top: 50px;
   right: 16px;
   bottom: 35px;
   width: 292px;
@@ -514,7 +514,7 @@
 /* ── LIVE FEED PANEL — complete rewrite ── */
 .live-feed-panel {
   position: absolute;
-  top: 280px;
+  top: 320px;
   bottom: 130px;
   left: 16px;
   z-index: 551;
@@ -849,7 +849,7 @@ body.map--fullscreen .live-feed-panel {
 /* ── ENGAGEMENT PANEL ── */
 .engage-panel {
   position: absolute;
-  top: 16px;
+  top: 50px;
   left: 16px;
   z-index: 550;
   background: var(--surface2);
@@ -940,4 +940,4 @@ body.map--fullscreen .live-feed-panel {
   gap: 6px;
   justify-content: center
 }
-
+

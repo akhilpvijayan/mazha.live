@@ -14,7 +14,7 @@ import { useLang } from '../context/LangContext';
 import { useTheme } from '../context/ThemeContext';
 import { HeatmapLayer } from './HeatmapLayer';
 import {
-  IconCloudRain, IconMapPin, IconFire, IconActivity, IconBarChart, IconAlertTriangle, IconShare, IconSearch, IconInstall,
+  IconCloudRain, IconMapPin, IconFire, IconActivity, IconBarChart, IconShare, IconSearch, IconInstall,
 } from './Icons';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useKeyboardAvoid } from '../hooks/useKeyboardAvoid';
@@ -33,6 +33,7 @@ import { FloatingSidebar } from './map/panels/FloatingSidebar';
 import { EngagementPanel } from './map/panels/EngagementPanel';
 import { InfoFooter } from './map/panels/InfoFooter';
 import { RainAnimation } from './map/modals/RainAnimation';
+import { AlertTicker } from './map/modals/AlertTicker';
 import { ReportModal, INTENSITY_OPTIONS } from '../components/map/modals/ReportModal';
 import { PWAInstallModal } from './map/modals/PWAInstallModal';
 import { createDamIcon, DAM_DATA_URL, DAM_IMAGES, getDamColor } from './map/DamIcon ';
@@ -563,25 +564,7 @@ export default function MapView() {
 
         <HeatmapLayer reports={reports.filter(r => !isGhost(r, now))} mapRef={mapRef} visible={showHeat} />
 
-        {/* Heavy rain banner */}
-        {heavyReport && (
-          <div className="map-banner map-banner--intense">
-            <span className="intense-pulse-dot" />
-            <IconAlertTriangle size={13} color="#fff" />
-            {t.intenseBanner} <span className="banner-highlight-red">{heavyReport.district}</span>
-            &nbsp;·&nbsp;<span className="banner-count-red">{reports.length} {t.reportsIn}</span>
-            <span className="intense-bar-track"><span className="intense-bar-fill" /></span>
-          </div>
-        )}
-
-        {/* Spillway alert banner */}
-        {spillwayDams.length > 0 && showDams && (
-          <div className="map-banner map-banner--intense" style={{ top: heavyReport ? 52 : 8, background: 'rgba(255,68,68,0.18)', borderColor: 'rgba(255,68,68,0.4)' }}>
-            <span className="intense-pulse-dot" style={{ background: '#ff4444' }} />
-            ⚠️ Spillway release active —&nbsp;
-            <span className="banner-highlight-red">{spillwayDams.map(d => d.name).join(', ')}</span>
-          </div>
-        )}
+        <AlertTicker heavyReport={heavyReport} spillwayDams={spillwayDams} reports={reports} />
 
         {/* Map tools */}
         <div className="map-tools">

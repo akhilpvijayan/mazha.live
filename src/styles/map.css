@@ -45,7 +45,7 @@ body.map--fullscreen .bottom-nav,
 body.map--fullscreen .nav-btn-row,
 body.map--fullscreen .info-footer,
 body.map--fullscreen .pwa-banner-bar,
-body.map--fullscreen .map-banner,
+body.map--fullscreen .alert-ticker-bar,
 body.map--fullscreen .mobile-pin-fab,
 body.map--fullscreen .report-fab,
 body.map--fullscreen .info-disclaimer-chip,
@@ -106,7 +106,7 @@ body.map--fullscreen .leaflet-container {
 /* ── MAP TOOLS ── */
 .map-tools {
   position: absolute;
-  top: 16px;
+  top: 50px;
   right: 324px;
   z-index: 600;
   display: flex;
@@ -245,7 +245,7 @@ body.map--fullscreen .leaflet-container {
 .mobile-pin-fab {
   display: none;
   position: absolute;
-  top: 16px;
+  top: 50px;
   left: 16px;
   z-index: 600;
   width: 42px;
