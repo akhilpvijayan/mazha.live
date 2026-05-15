@@ -1,5 +1,6 @@
 ﻿import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, useMap, Marker } from 'react-leaflet';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React from 'react';
 import 'leaflet/dist/leaflet.css';
 import { getPincodeData } from '../services/pincodeService';
 import { getIntensityColor } from '../utils/kerala';
@@ -22,7 +23,6 @@ import { useKeyboardAvoid } from '../hooks/useKeyboardAvoid';
 import { useSWAutoRefresh } from '../hooks/useSWAutoRefresh';
 import { NotificationSettingsModal } from './NotificationSettings';
 import { WalkthroughTour } from './Walkthroughtour';
-import { AdBanner } from './ads/AdBanner';
 import { AllReportsModal } from './map/modals/AllReportsModal';
 import { PinStatusModal } from './map/modals/PinStatusModal';
 import { MarkerTooltip } from './map/modals/MarkerTooltip';
@@ -81,6 +81,63 @@ function markerRadius(zoom: number, intensity: number, selected: boolean): numbe
   const r = (base + bonus) * screenScale;
   return selected ? r + 1.5 : r;
 }
+
+function getLevelLabel(l: Level): string {
+  switch (l) {
+    case 'drizzle': return 'DRZ';
+    case 'light': return 'LGT';
+    case 'moderate': return 'MOD';
+    case 'heavy': return 'HVY';
+    case 'extreme': return 'EXT';
+  }
+}
+
+function BottomReportTicker({ reports, now }: { reports: RainReport[]; now: number }) {
+  const maxItems = useMemo(() => {
+    const sorted = [...reports].sort((a, b) => b.lastUpdated - a.lastUpdated);
+    return sorted.slice(0, 80);
+  }, [reports]);
+
+  const content = maxItems.map(r => {
+    const ghost = isGhost(r, now);
+    const avg = ghost ? 0 : r.total / r.count;
+    const level = getLevel(avg);
+    const label = ghost ? 'FAD' : getLevelLabel(level);
+    const color = ghost ? '#4a5568' : getIntensityColor(avg);
+    return (
+      <span key={r.pin} className={`bt-item${ghost ? ' bt-item--faded' : ''}`}>
+        <span className="bt-stamp" style={{ background: color }} />
+        <span className="bt-item-pin">{r.pin}</span>
+        <span className="bt-item-place">{r.place || r.district}</span>
+        <span className={`bt-item-status${ghost ? ' bt-item-status--faded' : ` bt-item-status--${level}`}`}>{label}</span>
+        <span className="bt-sep">│</span>
+      </span>
+    );
+  });
+
+  return (
+    <div className="bottom-ticker">
+      <div className="bottom-ticker-track">
+        <span className="bottom-ticker-chunk">{content}</span>
+        <span className="bottom-ticker-chunk">{content}</span>
+      </div>
+    </div>
+  );
+}
+
+const LiveFeedCounts = React.memo(({ liveEvents }: { liveEvents: LiveEvent[] }) => {
+  let active = 0, faded = 0;
+  for (let i = 0; i < liveEvents.length; i++) {
+    if (liveEvents[i].faded) faded++;
+    else active++;
+  }
+  return (
+    <>
+      {active} active
+      {faded > 0 && <span style={{ color: 'var(--text3)', marginLeft: 4 }}>· {faded} faded</span>}
+    </>
+  );
+});
 
 const sbStyle: React.CSSProperties = { padding: '11px 10px', background: 'var(--card)', border: '1px solid var(--border2)', borderRadius: 11, color: 'var(--text2)', fontFamily: 'var(--ff)', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all .2s' };
 
@@ -141,12 +198,13 @@ export default function MapView() {
   const [showPWAModal, setShowPWAModal] = useState(false);
   const [selectedPin, setSelectedPin] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState<'radar' | 'activity' | 'insights' | 'districts'>('radar');
-  const [lastUpdated, setLastUpdated] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pwaDismissed, setPwaDismissed] = useState(false);
   const [reportCooldown, setReportCooldown] = useState(0);
   const [stormLevel, setStormLevel] = useState<Level | null>(null);
   const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
+  const lastRefreshRef = useRef(Date.now());
+  const [tick, setTick] = useState(0);
 
   /* ── dam state ── */
   const [damData, setDamData] = useState<any[]>([]);
@@ -161,7 +219,10 @@ export default function MapView() {
     Object.values(rainData).filter(r => !isExpired(r.lastUpdated, now)),
     [rainData, now]
   );
-  const heavyReport = reports.find(r => currentAvgIntensity(r, now) > 50);
+  const heavyReport = useMemo(() =>
+    reports.find(r => currentAvgIntensity(r, now) > 50),
+    [reports, now]
+  );
 
   /* ── spillway alert derived ── */
   const spillwayDams = useMemo(() =>
@@ -232,7 +293,7 @@ export default function MapView() {
       if (isSupabaseReady()) {
         loadRainReports().then(data => {
           if (Object.keys(data).length) setRainData(data);
-          setLastUpdated(0);
+          lastRefreshRef.current = Date.now();
         });
         // Also fetch last 48h individual events for live feed (2h = active, 2-48h = faded)
         const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
@@ -276,15 +337,15 @@ export default function MapView() {
           : { ...prev, [raw.pin]: { pin: raw.pin, place: raw.place, district: raw.district, lat: raw.lat, lng: raw.lng, total: raw.intensity, count: 1, lastUpdated: ts, firstReport: ts, lastIntensity: raw.intensity } };
       });
       setLiveEvents(prev => [{ id: raw.id, pin: raw.pin, place: raw.place, district: raw.district, intensity: raw.intensity, ts, faded: false }, ...prev].slice(0, 200));
-      setLastUpdated(0);
+      lastRefreshRef.current = Date.now();
     });
     return () => { channel?.unsubscribe(); };
   }, []);
 
-  // tick
+  // tick — lightweight refresh counter
   useEffect(() => {
     const id = setInterval(() => { setNow(Date.now()); }, TICK_MS);
-    const counterId = setInterval(() => { setLastUpdated(p => p + 1); }, 1000);
+    const counterId = setInterval(() => { setTick(p => p + 1); }, 1000);
     return () => {
       clearInterval(id);
       clearInterval(counterId);
@@ -327,9 +388,10 @@ export default function MapView() {
       });
       if (isSupabaseReady()) insertRainReport(pin, data.area, data.district, data.lat, data.lng, mm);
       setSelectedPin(pin);
-      setLastUpdated(0);
+      lastRefreshRef.current = Date.now();
       mapRef.current?.flyTo([data.lat, data.lng], 11, { duration: 1.6 });
       startCooldown();
+      lastRefreshRef.current = Date.now();
     } finally {
       setLoading(false);
       const level = MM_TO_LEVEL[mm] ?? 'moderate';
@@ -681,7 +743,7 @@ export default function MapView() {
 
         <div className="last-updated">
           <div className="upd-dot" />
-          {t.lastUpdated}: {lastUpdated}S AGO
+          {t.lastUpdated}: {Math.floor((Date.now() - lastRefreshRef.current) / 1000)}S AGO
           {isSupabaseReady() && <span style={{ marginLeft: 6, fontSize: 8, color: 'var(--cyan)', fontWeight: 700, letterSpacing: .5 }}>● LIVE</span>}
         </div>
 
@@ -701,10 +763,7 @@ export default function MapView() {
               Live Reports
             </div>
             <div className="lf-count">
-              {liveEvents.filter(e => !e.faded).length} active
-              {liveEvents.filter(e => e.faded).length > 0 && (
-                <span style={{ color: 'var(--text3)', marginLeft: 4 }}>· {liveEvents.filter(e => e.faded).length} faded</span>
-              )}
+              <LiveFeedCounts liveEvents={liveEvents} />
             </div>
           </div>
           <div className="lf-body">
@@ -744,22 +803,6 @@ export default function MapView() {
           </div>
         </div>
 
-        <div style={{
-          position: 'absolute',
-          bottom: 2,
-          left: 0,
-          right: 0,
-          padding: '4px 12px',
-          background: 'var(--card)',
-          backdropFilter: 'blur(100px)',
-          zIndex: 1900,
-          pointerEvents: 'auto',
-        }}>
-          <div style={{ fontSize: 9, color: 'var(--text3)', textAlign: 'right', marginBottom: 2 }}>AD</div>
-          <AdBanner slot="1122334455" style={{ maxHeight: 10, maxWidth: 10 }} />
-        </div>
-
-        {/* Mobile PIN search FAB */}
         <button className="mobile-pin-fab" onClick={() => setShowPin(true)} title="Search PIN">
           <IconSearch size={18} color="var(--cyan)" />
         </button>
@@ -781,6 +824,11 @@ export default function MapView() {
             <IconMapPin size={18} />
           </button>
         </div>
+
+        {/* Bottom report ticker */}
+        {reports.length > 0 && (
+          <BottomReportTicker reports={reports} now={now} />
+        )}
       </div>
 
       {/* Mobile sheet */}

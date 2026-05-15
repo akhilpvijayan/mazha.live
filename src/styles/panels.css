@@ -941,3 +941,28 @@ body.map--fullscreen .live-feed-panel {
   justify-content: center
 }
 
+/* ── INFINITE SCROLL SENTINEL ── */
+.scroll-sentinel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 10px;
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+}
+
+.scroll-sentinel-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cyan);
+  animation: sentinelPulse .8s ease-in-out infinite;
+}
+
+@keyframes sentinelPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .4; transform: scale(.7); }
+}
+

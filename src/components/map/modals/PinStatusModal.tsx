@@ -1,31 +1,58 @@
 // PinStatusModal.tsx imports
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { RainReport } from '../../../types';
 import { useLang } from '../../../context/LangContext';
 import { getPincodeData } from '../../../services/pincodeService';
 import { currentAvgIntensity, isGhost } from '../../../services/supabase';
 import { getIntensityLabel } from '../../../utils/kerala';
-import { IconCloudDrizzle, IconMapPin, IconSearch, IconShare, IconWhatsApp, IconX, IconCheck, IconCloudRain } from '../../Icons';
+import { IconCloudDrizzle, IconMapPin, IconSearch, IconShare, IconWhatsApp, IconX, IconCloudRain } from '../../Icons';
 import { ShareSheet, buildShareText, waShare, sbStyle } from '../modals/ShareSheet';
 import { BADGE_COLORS, getLevel, fmtTime } from '../modals/MarkerTooltip';
 import { DecayBar } from '../modals/DecayBar';
 import { INTENSITY_OPTIONS } from './ReportModal';
+
+type Result = RainReport | 'invalid' | 'nodata' | null;
 
 /* ─── PIN STATUS MODAL ────────────────────────────────────── */
 export function PinStatusModal({ reports, now, onClose }: { reports: RainReport[]; now: number; onClose: () => void }) {
   const { t } = useLang();
   const [pin, setPin] = useState('');
   const [searching, setSearching] = useState(false);
-  const [result, setResult] = useState<RainReport | null | 'notfound'>(null);
+  const [result, setResult] = useState<Result>(null);
   const [pinInfo, setPinInfo] = useState<{ area: string; district: string } | null>(null);
   const [shareData, setShareData] = useState<{ title: string; text: string } | null>(null);
-  const search = async () => {
-    if (pin.length !== 6) return; setSearching(true); setPinInfo(null);
+
+  const search = useCallback(async (p: string) => {
+    if (p.length !== 6) return;
+    setSearching(true); setPinInfo(null); setResult(null);
     await new Promise(r => setTimeout(r, 350));
-    const found = reports.find(r => r.pin === pin);
-    if (found) { setPinInfo({ area: found.place, district: found.district }); }
-    else { try { const data = await getPincodeData(pin); if (data) setPinInfo({ area: data.area, district: data.district }); } catch { } }
-    setResult(found || 'notfound'); setSearching(false);
+    const found = reports.find(r => r.pin === p);
+    if (found) {
+      setPinInfo({ area: found.place, district: found.district });
+      setResult(found);
+    } else {
+      try {
+        const data = await getPincodeData(p);
+        if (data) {
+          setPinInfo({ area: data.area, district: data.district });
+          setResult('nodata');
+        } else {
+          setResult('invalid');
+        }
+      } catch {
+        setResult('invalid');
+      }
+    }
+    setSearching(false);
+  }, [reports]);
+
+  useEffect(() => {
+    if (pin.length === 6) search(pin);
+    else { setResult(null); setPinInfo(null); }
+  }, [pin]);
+
+  const handleChange = (v: string) => {
+    setPin(v.replace(/\D/g, '').slice(0, 6));
   };
   return (<>
     <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -35,20 +62,34 @@ export function PinStatusModal({ reports, now, onClose }: { reports: RainReport[
         <div className="modal-body">
           <div className="step-label">Enter Pincode</div>
           <div className="pin-row" style={{ marginBottom: pinInfo ? 8 : 14 }}>
-            <input className={`pin-input${pin.length === 6 ? ' ok' : ''}`} placeholder="_ _ _ _ _ _" value={pin}
-              onChange={e => { setPin(e.target.value.replace(/\D/g, '').slice(0, 6)); setResult(null); }}
-              inputMode="numeric" maxLength={6} autoFocus onKeyDown={e => e.key === 'Enter' && search()} />
-            <button className="pin-locate-btn" onClick={search} disabled={pin.length !== 6 || searching}
+            <input className={`pin-input${pin.length === 6 ? (result === 'invalid' ? ' err' : result ? ' ok' : '') : ''}`} placeholder="_ _ _ _ _ _" value={pin}
+              onChange={e => handleChange(e.target.value)}
+              inputMode="numeric" maxLength={6} autoFocus />
+            <button className="pin-locate-btn" onClick={() => search(pin)} disabled={pin.length !== 6 || searching}
               style={pin.length === 6 ? { background: 'rgba(0,212,255,0.12)', borderColor: 'var(--border3)' } : {}}>
               {searching ? <span className="submit-spinner" style={{ borderTopColor: 'var(--cyan)' }} /> : <IconSearch size={20} />}
             </button>
           </div>
-          {result === 'notfound' && <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--text3)' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, opacity: .3 }}><IconCloudDrizzle size={44} color="var(--text3)" /></div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text2)', marginBottom: 5 }}>No data for PIN {pin}</div>
-            <div style={{ fontSize: 12, lineHeight: 1.6 }}>No rain reports yet for this pincode.</div>
+          {result === 'invalid' && <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--text3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, opacity: .3 }}><IconMapPin size={44} color="var(--text3)" /></div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#ff6b6b', marginBottom: 5 }}>Invalid Pincode</div>
+            <div style={{ fontSize: 12, lineHeight: 1.6 }}>{pin} is not a valid Indian pincode.</div>
           </div>}
-          {result && result !== 'notfound' && (() => {
+
+          {result === 'nodata' && pinInfo && <div style={{ animation: 'successIn .4s var(--spring)' }}>
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border2)', borderRadius: 16, padding: '18px', marginBottom: 14, textAlign: 'center' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(0,212,255,0.08)', border: '2px solid rgba(0,212,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                <IconMapPin size={26} color="var(--cyan)" />
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{pinInfo.area}</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12 }}>{pinInfo.district} · PIN {pin}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', padding: '8px 12px', background: 'var(--card2)', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <IconCloudDrizzle size={14} color="var(--text3)" /> No rain reports yet for this area.
+              </div>
+            </div>
+          </div>}
+
+          {result && result !== 'invalid' && result !== 'nodata' && (() => {
             const r = result; const ghost = isGhost(r, now); const effAvg = currentAvgIntensity(r, now);
             const rawAvg = r.total / r.count; const level = ghost ? 'drizzle' : getLevel(effAvg); const col = ghost ? '#7a8899' : BADGE_COLORS[level];
             const LvlIcon = INTENSITY_OPTIONS.find(o => o.level === level)?.Icon || IconCloudRain;

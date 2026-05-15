@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLang } from '../../../context/LangContext';
 import { getPincodeData } from '../../../services/pincodeService';
 import {
-  IconCloudRain, IconCrosshair, IconSend, IconCheck, IconAlertTriangle, IconX, IconMapPin,
+  IconCloudRain, IconCrosshair, IconSend, IconAlertTriangle, IconX, IconMapPin,
   IconCloudDrizzle, IconCloud, IconCloudLightning, IconWaves
 } from '../../Icons';
 import { BADGE_COLORS } from '../modals/MarkerTooltip';
@@ -74,14 +74,22 @@ export function ReportModal({ onClose, onSubmit }: {
           <div className="pin-dots">
             {Array.from({ length: 6 }).map((_, i) => <div key={i} className={`pin-dot${i < pin.length ? ' on' : ''}`} />)}
           </div>
-          {pinPreview && (
+          {pinLooking && (
+            <div className="pin-locating">
+              <span className="pin-locating-dot" />
+              Looking up location…
+            </div>
+          )}
+          {pinPreview && !pinLooking && (
             <div className="pin-preview">
-              <IconMapPin size={12} color="var(--cyan)" />
-              <div>
-                <div className="pin-preview-place">{pinPreview.area}</div>
-                <div className="pin-preview-dist">{pinPreview.district} District · PIN {pin}</div>
+              <div className="pin-preview-icon">
+                <IconMapPin size={16} color="var(--cyan)" />
               </div>
-              <IconCheck size={14} color="#00cc66" />
+              <div className="pin-preview-body">
+                <div className="pin-preview-place">{pinPreview.area}</div>
+                <div className="pin-preview-dist">{pinPreview.district} · {pin}</div>
+              </div>
+              <div className="pin-preview-badge">✓ Verified</div>
             </div>
           )}
           {pinErr && <div className="pin-err" style={{ marginTop: 8 }}><IconAlertTriangle size={13} color="#ff6666" />{pinErr}</div>}

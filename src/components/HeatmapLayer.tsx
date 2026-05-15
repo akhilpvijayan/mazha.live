@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import type { RainReport } from '../types';
 import { getHeatColor } from '../utils/kerala';
+import { decayFactor } from '../services/supabase';
 
 interface Props {
   reports: RainReport[];
@@ -35,17 +36,20 @@ export function HeatmapLayer({ reports, mapRef, visible }: Props) {
     const zoomScale = Math.max(0.25, Math.min(1.6, (zoom - 5) / 7));
 
     reports.forEach(r => {
-      const avg = r.total / r.count;
+      const rawAvg = r.total / r.count;
+      const decay = decayFactor(r.lastUpdated);
+      const avg = rawAvg * decay;
+      if (avg <= 0 && decay <= 0) return;
       let pt: { x: number; y: number };
       try { pt = map.latLngToContainerPoint([r.lat, r.lng]); } catch { return; }
 
-      const [red, g, b, a] = getHeatColor(avg);
-      const baseRadius = Math.max(20, Math.min(60, 20 + avg * 0.45));
+      const [red, g, b, a] = getHeatColor(Math.max(avg, 4));
+      const baseRadius = Math.max(18, Math.min(60, 18 + rawAvg * 0.55));
       const radius = baseRadius * zoomScale;
 
       const grad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, radius);
-      grad.addColorStop(0,    `rgba(${red},${g},${b},${a / 255})`);
-      grad.addColorStop(0.5,  `rgba(${red},${g},${b},${(a * 0.4) / 255})`);
+      grad.addColorStop(0,    `rgba(${red},${g},${b},${(a * decay) / 255})`);
+      grad.addColorStop(0.6,  `rgba(${red},${g},${b},${(a * 0.55 * decay) / 255})`);
       grad.addColorStop(1,    `rgba(${red},${g},${b},0)`);
 
       ctx.beginPath();

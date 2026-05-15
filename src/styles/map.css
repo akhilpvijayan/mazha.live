@@ -54,7 +54,8 @@ body.map--fullscreen .mobile-live-sheet,
 body.map--fullscreen header,
 body.map--fullscreen .header,
 body.map--fullscreen .float-sidebar,
-body.map--fullscreen .engage-panel {
+body.map--fullscreen .engage-panel,
+body.map--fullscreen .bottom-ticker {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;

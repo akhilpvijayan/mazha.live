@@ -23,7 +23,7 @@ export function AlertTicker({ heavyReport, spillwayDams, reports }: {
         </span>
         <span className="alert-ticker-label">HEAVY RAIN</span>
         <span className="alert-ticker-value">{heavyReport.district}</span>
-        <span className="alert-ticker-meta">{reports.length} reports</span>
+        <span className="alert-ticker-meta">{reports.filter(r => r.district === heavyReport.district).reduce((s, r) => s + r.count, 0)} reports</span>
       </span>
     );
   }

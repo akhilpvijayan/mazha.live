@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import type { LiveEvent } from '../../../types';
 import { useLang } from '../../../context/LangContext';
 import { getIntensityLabel } from '../../../utils/kerala';
@@ -5,8 +6,29 @@ import { IconActivity, IconCloudRain, IconMapPin } from '../../Icons';
 import { BADGE_COLORS, getLevel, fmtTime } from '../modals/MarkerTooltip';
 import { INTENSITY_OPTIONS } from '../modals/ReportModal';
 
+const PAGE = 20;
+
 export function ActivityTab({ liveEvents }: { liveEvents: LiveEvent[] }) {
   const { t } = useLang();
+  const [count, setCount] = useState(PAGE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setCount(PAGE);
+  }, [liveEvents.length]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && count < liveEvents.length) {
+        setCount(c => Math.min(c + PAGE, liveEvents.length));
+      }
+    }, { rootMargin: '100px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [count, liveEvents.length]);
+
   if (!liveEvents.length) return (
     <div className="no-reports">
       <div className="no-reports-icon"><IconActivity size={32} color="var(--text3)" /></div>
@@ -15,7 +37,9 @@ export function ActivityTab({ liveEvents }: { liveEvents: LiveEvent[] }) {
     </div>
   );
 
-  return <div className="activity-list">{liveEvents.map((ev, idx) => {
+  const visible = liveEvents.slice(0, count);
+
+  return <div className="activity-list">{visible.map((ev, idx) => {
     const level = getLevel(ev.intensity);
     const col = ev.faded ? '#6b7a8d' : BADGE_COLORS[level];
     const LvlIcon = INTENSITY_OPTIONS.find(o => o.level === level)?.Icon || IconCloudRain;
@@ -42,5 +66,7 @@ export function ActivityTab({ liveEvents }: { liveEvents: LiveEvent[] }) {
         </div>
       </div>
     );
-  })}</div>;
+  })}
+  {count < liveEvents.length && <div ref={sentinelRef} className="scroll-sentinel"><span className="scroll-sentinel-dot" /> Loading more…</div>}
+  </div>;
 }
