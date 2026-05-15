@@ -16,7 +16,7 @@ import { useTheme } from '../context/ThemeContext';
 import { HeatmapLayer } from './HeatmapLayer';
 import { AlertTicker } from './map/modals/AlertTicker';
 import {
-  IconCloudRain, IconMapPin, IconFire, IconActivity, IconBarChart, IconShare, IconSearch, IconInstall,
+  IconCloudRain, IconMapPin, IconFire, IconActivity, IconBarChart, IconShare, IconSearch, IconInstall, IconTrophy,
 } from './Icons';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useKeyboardAvoid } from '../hooks/useKeyboardAvoid';
@@ -30,6 +30,7 @@ import { DistrictShareModal } from './map/modals/DistrictShareModal';
 import { LiveTab } from './map/tabs/LiveTab';
 import { ActivityTab } from './map/tabs/ActivityTab';
 import { InsightsTab } from './map/tabs/InsightsTab';
+import { LeaderboardTab } from './map/tabs/LeaderboardTab';
 import { FloatingSidebar } from './map/panels/FloatingSidebar';
 import { EngagementPanel } from './map/panels/EngagementPanel';
 import { InfoFooter } from './map/panels/InfoFooter';
@@ -92,7 +93,7 @@ function getLevelLabel(l: Level): string {
   }
 }
 
-function BottomReportTicker({ reports, now }: { reports: RainReport[]; now: number }) {
+function BottomReportTicker({ reports, now, t: tk }: { reports: RainReport[]; now: number; t: any }) {
   const maxItems = useMemo(() => {
     const sorted = [...reports].sort((a, b) => b.lastUpdated - a.lastUpdated);
     return sorted.slice(0, 80);
@@ -102,7 +103,7 @@ function BottomReportTicker({ reports, now }: { reports: RainReport[]; now: numb
     const ghost = isGhost(r, now);
     const avg = ghost ? 0 : r.total / r.count;
     const level = getLevel(avg);
-    const label = ghost ? 'FAD' : getLevelLabel(level);
+    const label = ghost ? tk.fadedTicker : getLevelLabel(level);
     const color = ghost ? '#4a5568' : getIntensityColor(avg);
     return (
       <span key={r.pin} className={`bt-item${ghost ? ' bt-item--faded' : ''}`}>
@@ -125,7 +126,7 @@ function BottomReportTicker({ reports, now }: { reports: RainReport[]; now: numb
   );
 }
 
-const LiveFeedCounts = React.memo(({ liveEvents }: { liveEvents: LiveEvent[] }) => {
+const LiveFeedCounts = React.memo(({ liveEvents, t }: { liveEvents: LiveEvent[]; t: any }) => {
   let active = 0, faded = 0;
   for (let i = 0; i < liveEvents.length; i++) {
     if (liveEvents[i].faded) faded++;
@@ -133,8 +134,8 @@ const LiveFeedCounts = React.memo(({ liveEvents }: { liveEvents: LiveEvent[] }) 
   }
   return (
     <>
-      {active} active
-      {faded > 0 && <span style={{ color: 'var(--text3)', marginLeft: 4 }}>· {faded} faded</span>}
+      {active} {t.liveFeedActive}
+      {faded > 0 && <span style={{ color: 'var(--text3)', marginLeft: 4 }}>· {faded} {t.liveFeedFaded}</span>}
     </>
   );
 });
@@ -203,6 +204,7 @@ export default function MapView() {
   const [reportCooldown, setReportCooldown] = useState(0);
   const [stormLevel, setStormLevel] = useState<Level | null>(null);
   const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const lastRefreshRef = useRef(Date.now());
   const [tick, setTick] = useState(0);
 
@@ -760,10 +762,10 @@ export default function MapView() {
           <div className="lf-header">
             <div className="lf-title">
               <div className="lf-live-dot" />
-              Live Reports
+              {t.liveFeed}
             </div>
             <div className="lf-count">
-              <LiveFeedCounts liveEvents={liveEvents} />
+              <LiveFeedCounts liveEvents={liveEvents} t={t} />
             </div>
           </div>
           <div className="lf-body">
@@ -823,11 +825,14 @@ export default function MapView() {
           <button className={`nav-btn${showDistShare ? ' nav-btn--active' : ''}`} title="Districts" onClick={() => setShowDist(true)}>
             <IconMapPin size={18} />
           </button>
+          <button className="nav-btn nav-btn-leaderboard" title="Leaderboard" onClick={() => setShowLeaderboard(true)}>
+            <IconTrophy size={16} color="var(--cyan)" />
+          </button>
         </div>
 
         {/* Bottom report ticker */}
         {reports.length > 0 && (
-          <BottomReportTicker reports={reports} now={now} />
+          <BottomReportTicker reports={reports} now={now} t={t} />
         )}
       </div>
 
@@ -909,6 +914,24 @@ export default function MapView() {
           level={stormLevel}
           onDismiss={() => setStormLevel(null)}
         />
+      )}
+
+      {/* Mobile leaderboard modal */}
+      {showLeaderboard && (
+        <div className="leaderboard-modal-overlay" onClick={() => setShowLeaderboard(false)}>
+          <div className="leaderboard-modal" onClick={e => e.stopPropagation()}>
+            <div className="leaderboard-modal-header">
+              <IconTrophy size={18} color="var(--cyan)" />
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>District Leaderboard</span>
+              <button className="leaderboard-modal-close" onClick={() => setShowLeaderboard(false)}>
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+            <div className="leaderboard-modal-body">
+              <LeaderboardTab reports={reports} now={now} />
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

@@ -1,12 +1,14 @@
 import { ReactNode, useRef, useEffect, useCallback, useState } from "react";
 import { RainReport } from "../../../types";
 import { IconAlertTriangle } from "../../Icons";
+import { useLang } from "../../../context/LangContext";
 
 export function AlertTicker({ heavyReport, spillwayDams, reports }: {
   heavyReport: RainReport | undefined;
   spillwayDams: any[];
   reports: RainReport[];
 }) {
+  const { t } = useLang();
   const trackRef = useRef<HTMLDivElement>(null);
   const chunkRef = useRef<HTMLSpanElement>(null);
   const xRef = useRef(0);
@@ -21,7 +23,7 @@ export function AlertTicker({ heavyReport, spillwayDams, reports }: {
         <span className="alert-ticker-icon">
           <IconAlertTriangle size={10} color="#ff3b3b" />
         </span>
-        <span className="alert-ticker-label">HEAVY RAIN</span>
+        <span className="alert-ticker-label">{t.heavyRain}</span>
         <span className="alert-ticker-value">{heavyReport.district}</span>
         <span className="alert-ticker-meta">{reports.filter(r => r.district === heavyReport.district).reduce((s, r) => s + r.count, 0)} reports</span>
       </span>
@@ -32,7 +34,7 @@ export function AlertTicker({ heavyReport, spillwayDams, reports }: {
     items.push(
       <span key={`s-${d.id || d.name}`} className="alert-ticker-item alert-ticker-item--critical">
         <span className="alert-ticker-icon alert-ticker-icon--pulse">▲</span>
-        <span className="alert-ticker-label">SPILLWAY RELEASE</span>
+        <span className="alert-ticker-label">{t.spillwayRelease}</span>
         <span className="alert-ticker-value">{d.name}</span>
       </span>
     );
@@ -47,7 +49,7 @@ export function AlertTicker({ heavyReport, spillwayDams, reports }: {
         <span key="none" className="alert-ticker-item alert-ticker-item--idle">
           <span className="alert-ticker-icon">◉</span>
           <span className="alert-ticker-label">LIVE</span>
-          <span className="alert-ticker-value">Kerala Rain Monitor</span>
+          <span className="alert-ticker-value">{t.keralaRainMonitor}</span>
         </span>,
       ];
 
@@ -119,17 +121,17 @@ export function AlertTicker({ heavyReport, spillwayDams, reports }: {
         {isSpillway ? (
           <>
             <span className="badge-dot badge-dot--pulse" />
-            <span className="badge-label">ALERT</span>
+            <span className="badge-label">{t.alert}</span>
           </>
         ) : hasAlerts ? (
           <>
             <span className="badge-dot badge-dot--pulse" />
-            <span className="badge-label">WARN</span>
+            <span className="badge-label">{t.warn}</span>
           </>
         ) : (
           <>
             <span className="badge-dot" />
-            <span className="badge-label">LIVE</span>
+            <span className="badge-label">{t.live}</span>
           </>
         )}
       </div>

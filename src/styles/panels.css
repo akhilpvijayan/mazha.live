@@ -89,27 +89,29 @@
 
 .fsb-tabs {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   padding-bottom: 11px;
   border-bottom: 1px solid var(--border);
 }
 
 .fsb-tab {
   flex: 1;
-  padding: 6px 3px;
+  padding: 6px 2px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 8px;
   font-family: var(--ff);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   color: var(--text2);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   transition: all .2s;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .fsb-tab:hover {

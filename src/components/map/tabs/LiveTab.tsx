@@ -57,7 +57,7 @@ export function LiveTab({ liveEvents, selectedPin, onSelect }: {
           <div className="rc-time">{fmtTime(ev.ts, t)}</div>
         </div>
         {ev.faded
-          ? <div className={`rc-badge badge-drizzle`} style={{ background: 'rgba(107,122,141,0.15)', color: '#6b7a8d', border: '1px solid rgba(107,122,141,0.3)' }}>FADED</div>
+          ? <div className={`rc-badge badge-drizzle`} style={{ background: 'rgba(107,122,141,0.15)', color: '#6b7a8d', border: '1px solid rgba(107,122,141,0.3)' }}>{t.fadedBadge}</div>
           : <div className={`rc-badge badge-${level}`}>{getIntensityLabel(ev.intensity).toUpperCase()}</div>
         }
         <div className="rc-verify"><IconShield size={11} color="#00cc66" />{t.communityVerified}</div>

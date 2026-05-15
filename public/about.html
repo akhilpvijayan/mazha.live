@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About – mazha.live | Live Kerala Rain Tracker</title>
+  <meta name="description" content="Learn about mazha.live — a free community-driven platform for tracking live rain across Kerala. PIN-based rain reporting, live map, and dam level data." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://mazha.live/about.html" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #080c14;
+      color: #c8d8e8;
+      font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: #00d4ff; text-decoration: none; transition: color .2s; }
+    a:hover { color: #66e5ff; }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 48px;
+    }
+    .page-header .logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #00d4ff, #1a6fff);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #eef3ff;
+      letter-spacing: -.3px;
+    }
+    .page-header .sub {
+      font-size: 12px;
+      color: #4a6a84;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      margin-left: auto;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    /* ── Sections ── */
+    section { margin-bottom: 40px; }
+    h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #eef3ff;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h2 .accent {
+      width: 4px; height: 20px;
+      background: #00d4ff;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    p { font-size: 14px; color: #8aaccc; margin-bottom: 14px; }
+    p strong { color: #eef3ff; font-weight: 600; }
+    ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    ul li {
+      font-size: 14px;
+      color: #8aaccc;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    ul li .icon {
+      width: 28px; height: 28px;
+      background: rgba(0,212,255,0.1);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+    ul li strong { color: #eef3ff; display: block; margin-bottom: 2px; }
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(0,212,255,0.06), rgba(26,111,255,0.04));
+      border: 1px solid rgba(0,212,255,0.15);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 20px;
+    }
+    .highlight-box p { margin-bottom: 0; font-size: 13px; }
+    .highlight-box strong { color: #00d4ff; }
+    .contact-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 20px 22px;
+    }
+    .contact-card p { margin-bottom: 4px; font-size: 13px; }
+    .contact-card .label { color: #4a6a84; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+    /* ── Footer ── */
+    .page-footer {
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #4a6a84;
+    }
+    .page-footer a { font-weight: 600; }
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .container { padding: 28px 16px 60px; }
+      .page-header { flex-wrap: wrap; }
+      .nav-links { margin-left: 0; width: 100%; }
+      .page-footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header class="page-header">
+      <div class="logo">M</div>
+      <div>
+        <h1>mazha.live</h1>
+        <div class="sub">Live Kerala Rain Tracker</div>
+      </div>
+      <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/privacy-policy.html">Privacy</a>
+      </nav>
+    </header>
+
+    <!-- ─── What it is ─── -->
+    <section>
+      <h2><span class="accent"></span>What is mazha.live?</h2>
+      <p>
+        <strong>mazha.live</strong> (<em>mazha</em> means "rain" in Malayalam) is a free, community-driven platform that lets anyone in Kerala report and track rainfall in real time. No account needed. No sign-up. Just a pincode and a tap.
+      </p>
+      <p>
+        Every report appears instantly on a live map, colour-coded by intensity — from drizzle (green) to extreme (red). The result is a district-by-district picture of current rain across Kerala, built by the people who are actually experiencing it.
+      </p>
+    </section>
+
+    <!-- ─── How it works ─── -->
+    <section>
+      <h2><span class="accent"></span>How It Works</h2>
+      <ul>
+        <li>
+          <span class="icon">📍</span>
+          <div>
+            <strong>Enter a Pincode</strong>
+            Type any 6-digit Kerala pincode. The app looks up the location instantly using pincode data.
+          </div>
+        </li>
+        <li>
+          <span class="icon">💧</span>
+          <div>
+            <strong>Select Rain Intensity</strong>
+            Choose from five levels — Drizzle, Light, Moderate, Heavy, or Extreme. Each corresponds to a measurable mm/hr range.
+          </div>
+        </li>
+        <li>
+          <span class="icon">🗺️</span>
+          <div>
+            <strong>See It Live on the Map</strong>
+            Your report appears as a coloured dot on the map. The colour and size reflect the intensity, and a heatmap overlay shows overall rainfall density.
+          </div>
+        </li>
+        <li>
+          <span class="icon">🏞️</span>
+          <div>
+            <strong>Dam Levels &amp; Spillway Alerts</strong>
+            Live dam storage percentages and spillway release data are shown alongside the rain map — useful for downstream flood awareness.
+          </div>
+        </li>
+      </ul>
+      <div class="highlight-box">
+        <p><strong>⚡ Reports fade over 2 hours</strong> — intensity automatically decays until the report expires at 48 hours. Always shows the freshest picture.</p>
+      </div>
+    </section>
+
+    <!-- ─── Who it's for ─── -->
+    <section>
+      <h2><span class="accent"></span>Who It's For</h2>
+      <ul>
+        <li>
+          <span class="icon">🏠</span>
+          <div>
+            <strong>Kerala Residents</strong>
+            Check if it's raining in your area or where you're heading next. See what your neighbours are reporting.
+          </div>
+        </li>
+        <li>
+          <span class="icon">✈️</span>
+          <div>
+            <strong>Travelers &amp; Commuters</strong>
+            Plan around the rain. Check conditions across districts before starting a trip.
+          </div>
+        </li>
+        <li>
+          <span class="icon">🌾</span>
+          <div>
+            <strong>Farmers</strong>
+            Get a sense of recent rainfall in your region. Community-reported data can supplement local observations.
+          </div>
+        </li>
+        <li>
+          <span class="icon">⚠️</span>
+          <div>
+            <strong>Disaster Preparedness</strong>
+            Heavy rain alerts and spillway release information help with situational awareness during monsoon season.
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ─── Community & Free ─── -->
+    <section>
+      <h2><span class="accent"></span>Community-Driven &amp; Always Free</h2>
+      <p>
+        mazha.live is built entirely around crowd-sourced data. Every dot on the map was placed by someone who took a few seconds to report what they were seeing. The more people participate, the more accurate and useful the map becomes.
+      </p>
+      <div class="highlight-box">
+        <p><strong>✅ No account. No ads that trick you. No paywall.</strong> The site is supported by non-intrusive Google AdSense ads to cover hosting and development costs.</p>
+      </div>
+    </section>
+
+    <!-- ─── Contact ─── -->
+    <section>
+      <h2><span class="accent"></span>Contact</h2>
+      <div class="contact-card">
+        <div class="label">Get in Touch</div>
+        <p>Have feedback, suggestions, or found a bug? We'd love to hear from you.</p>
+        <p style="margin-top: 10px;">
+          Email: <a href="mailto:contact@mazha.live">contact@mazha.live</a>
+        </p>
+        <p style="font-size: 12px; color: #4a6a84; margin-top: 6px;">
+          Response time: usually within 1–2 business days.
+        </p>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <span>&copy; 2024–2025 mazha.live</span>
+      <nav>
+        <a href="/">Home</a> &nbsp;·&nbsp;
+        <a href="/about.html">About</a> &nbsp;·&nbsp;
+        <a href="/privacy-policy.html">Privacy Policy</a>
+      </nav>
+    </footer>
+
+  </div>
+</body>
+</html>

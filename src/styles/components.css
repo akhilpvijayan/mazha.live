@@ -266,7 +266,7 @@
 /* ── LAST UPDATED ── */
 .last-updated {
   position: absolute;
-  bottom: 30px;
+  bottom: 35px;
   left: 16px;
   z-index: 550;
   display: flex;
@@ -1787,7 +1787,77 @@
   .bt-item-status {
     font-size: 8px;
   }
+@media (max-width: 768px) {
   .bottom-ticker-track {
     animation-duration: 16s;
   }
+}
+
+/* ── LEADERBOARD NAV BUTTON ── */
+.nav-btn-leaderboard {
+  font-size: 0 !important;
+}
+
+.nav-btn-leaderboard:active {
+  transform: scale(0.9) !important;
+}
+
+/* ── LEADERBOARD MODAL ── */
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.leaderboard-modal {
+  width: 100%;
+  max-width: 500px;
+  max-height: 80vh;
+  background: var(--bg2);
+  border-radius: 18px 18px 0 0;
+  display: flex;
+  flex-direction: column;
+  animation: sheetSlide .35s var(--spring);
+  overflow: hidden;
+}
+
+.leaderboard-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.leaderboard-modal-close {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s;
+}
+
+.leaderboard-modal-close:hover {
+  background: var(--card);
+  color: var(--text);
+}
+
+.leaderboard-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 2px;
 }

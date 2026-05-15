@@ -1,6 +1,7 @@
 import { currentAvgIntensity, isGhost } from "../../../services/supabase";
 import { RainReport } from "../../../types";
 import { AdBanner } from "../../ads/AdBanner";
+import { useLang } from "../../../context/LangContext";
 import {
   IconActivity,
   IconAlertTriangle,
@@ -16,6 +17,7 @@ export function EngagementPanel({
   reports: RainReport[];
   now: number;
 }) {
+  const { t } = useLang();
   const active = reports.filter((r) => !isGhost(r, now));
   const ghosts = reports.filter((r) => isGhost(r, now));
   const total = reports.reduce((s, r) => s + r.count, 0);
@@ -26,10 +28,10 @@ export function EngagementPanel({
     Math.floor((now - 1700000000000) / 3600000) % 8760 + 1200;
 
   const STATS = [
-    { val: total || "—", lbl: "Reports", icon: <IconDroplet size={13} color="#00d4ff" />, color: "#00d4ff" },
-    { val: active.length || "—", lbl: "Active", icon: <IconActivity size={13} color="#00cc66" />, color: "#00cc66" },
-    { val: districtCount || "—", lbl: "Districts", icon: <IconMapPin size={13} color="#a855f7" />, color: "#a855f7" },
-    { val: maxMm > 0 ? `${maxMm.toFixed(0)}mm` : "—", lbl: "Peak", icon: <IconAlertTriangle size={13} color="#ff7a00" />, color: "#ff7a00" },
+    { val: total || "—", lbl: t.statsReports, icon: <IconDroplet size={13} color="#00d4ff" />, color: "#00d4ff" },
+    { val: active.length || "—", lbl: t.statsActive, icon: <IconActivity size={13} color="#00cc66" />, color: "#00cc66" },
+    { val: districtCount || "—", lbl: t.statsDistricts, icon: <IconMapPin size={13} color="#a855f7" />, color: "#a855f7" },
+    { val: maxMm > 0 ? `${maxMm.toFixed(0)}mm` : "—", lbl: t.statsPeak, icon: <IconAlertTriangle size={13} color="#ff7a00" />, color: "#ff7a00" },
   ];
 
   return (
@@ -38,7 +40,7 @@ export function EngagementPanel({
       {/* ── Title ── */}
       <div className="ep-title">
         <IconUsers size={12} color="var(--text3)" />
-        <span>Kerala Rain Network</span>
+        <span>{t.keralaRainNetwork}</span>
         <span className="ep-live-dot" />
       </div>
 
@@ -56,11 +58,11 @@ export function EngagementPanel({
       {/* ── Footer ── */}
       <div className="ep-footer">
         <span style={{ color: "var(--text3)", fontSize: 9 }}>
-          {ghosts.length > 0 ? `${ghosts.length} faded` : "All active"}
+          {ghosts.length > 0 ? `${ghosts.length} ${t.faded}` : t.allActive}
         </span>
         <span style={{ color: "var(--text3)", fontSize: 9 }}>·</span>
         <span style={{ color: "var(--cyan)", fontSize: 9, fontWeight: 700 }}>
-          {hoursSince.toLocaleString()}h uptime
+          {hoursSince.toLocaleString()}{t.uptime}
         </span>
       </div>
 

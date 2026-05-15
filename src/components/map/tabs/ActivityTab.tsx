@@ -47,8 +47,8 @@ export function ActivityTab({ liveEvents }: { liveEvents: LiveEvent[] }) {
       <div key={`${ev.id}-${ev.ts}`} className="activity-item" style={{ animationDelay: `${idx * 35}ms`, opacity: ev.faded ? 0.45 : 1 }}>
         <div className="act-icon" style={{ background: `${col}18` }}><LvlIcon size={17} color={col} /></div>
         <div className="act-body">
-          <div className="act-title">
-            {ev.faded ? 'Faded' : getIntensityLabel(ev.intensity)} rain — {ev.place}
+            <div className="act-title">
+              {ev.faded ? t.fadedRain : getIntensityLabel(ev.intensity)} — {ev.place}
           </div>
           <div className="act-meta">
             <span className="act-pin"><IconMapPin size={9} /> {ev.district} · {ev.pin}</span>
@@ -57,10 +57,10 @@ export function ActivityTab({ liveEvents }: { liveEvents: LiveEvent[] }) {
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
           {ev.faded
-            ? <div style={{ fontSize: 9, color: '#6b7a8d', fontWeight: 700, padding: '2px 6px', background: 'rgba(107,122,141,0.1)', borderRadius: 5 }}>FADED</div>
+            ? <div style={{ fontSize: 9, color: '#6b7a8d', fontWeight: 700, padding: '2px 6px', background: 'rgba(107,122,141,0.1)', borderRadius: 5 }}>{t.fadedBadge}</div>
             : <>
                 <div style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 800, color: col }}>{ev.intensity.toFixed(0)}</div>
-                <div style={{ fontSize: 9, color: 'var(--text3)' }}>mm/hr</div>
+                <div style={{ fontSize: 9, color: 'var(--text3)' }}>{t.mmhr}</div>
               </>
           }
         </div>

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import type { RainReport, LiveEvent } from '../../../types';
 import { useLang } from '../../../context/LangContext';
-import { IconCloudRain, IconActivity, IconBarChart, IconSearch, IconDroplet, IconShare } from '../../Icons';
+import { IconCloudRain, IconActivity, IconBarChart, IconSearch, IconDroplet, IconShare, IconTrophy } from '../../Icons';
 import { AdBanner } from '../../ads/AdBanner';
 import { LiveTab } from '../tabs/LiveTab';
 import { ActivityTab } from '../tabs/ActivityTab';
 import { InsightsTab } from '../tabs/InsightsTab';
+import { LeaderboardTab } from '../tabs/LeaderboardTab';
 
-type SbTab = 'live' | 'activity' | 'insights';
+type SbTab = 'live' | 'activity' | 'insights' | 'leaderboard';
 
 export function FloatingSidebar({ reports, now, selectedPin, onSelect, onViewAll, onDistrictShare, onPinStatus, liveEvents }: {
   reports: RainReport[]; now: number; selectedPin: string | null; liveEvents: LiveEvent[];
@@ -20,6 +21,7 @@ export function FloatingSidebar({ reports, now, selectedPin, onSelect, onViewAll
     { id: 'live' as SbTab, Icon: IconCloudRain, label: 'Live' },
     { id: 'activity' as SbTab, Icon: IconActivity, label: t.activity },
     { id: 'insights' as SbTab, Icon: IconBarChart, label: t.insights },
+    { id: 'leaderboard' as SbTab, Icon: IconTrophy, label: 'Board' },
   ];
   return (
     <div className="float-sidebar">
@@ -57,6 +59,7 @@ export function FloatingSidebar({ reports, now, selectedPin, onSelect, onViewAll
         {tab === 'live' && <LiveTab liveEvents={liveEvents} selectedPin={selectedPin} onSelect={onSelect} />}
         {tab === 'activity' && <ActivityTab liveEvents={liveEvents} />}
         {tab === 'insights' && <InsightsTab reports={reports} now={now} />}
+        {tab === 'leaderboard' && <LeaderboardTab reports={reports} now={now} />}
       </div>
       <div style={{ padding: '8px 10px', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', background: 'var(--card)' }}>
         <div style={{ fontSize: 9, color: 'var(--text3)', textAlign: 'right', marginBottom: 3, letterSpacing: '.4px' }}>AD</div>
